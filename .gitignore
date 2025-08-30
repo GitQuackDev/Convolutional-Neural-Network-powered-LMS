@@ -26,6 +26,9 @@ pip-delete-this-directory.txt
 # Ignore custom build/core directories
 .bmad-core/
 
+# Ignore documentation
+docs/
+
 # Ignore OS generated files
 .DS_Store
 Thumbs.db
@@ -33,59 +36,4 @@ ehthumbs.db
 Icon?
 Desktop.ini
 
-# Ignore logs and temp files
-*.log
-*.tmp
-*.swp
-*.swo
-*.bak
-*.orig
-
-# Ignore node modules and lock files
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
-yarn.lock
-
-# Ignore compiled files
-*.so
-*.dll
-*.exe
-*.out
-*.class
-*.o
-*.a
-*.lib
-
-# Ignore test and coverage outputs
-.coverage
-.tox/
-.nox/
-.cache/
-coverage.xml
-htmlcov/
-dist/
-build/
-*.spec
-
-# Ignore editor/project files
-.idea/
-*.iml
-*.sublime-workspace
-*.sublime-project
-
-# Ignore miscellaneous
-*.sqlite3
-*.db
-*.tgz
-*.tar.gz
-*.zip
-
-# Ignore local environment files
-.env.*
-.envrc
-.secret
-secrets.*
-credentials.*
+# ...existing code...
