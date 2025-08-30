@@ -1,0 +1,1 @@
+export { CourseModuleView } from './CourseModuleView';

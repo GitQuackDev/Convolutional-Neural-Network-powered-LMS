@@ -29,6 +29,18 @@ pip-delete-this-directory.txt
 # Ignore documentation
 docs/
 
+# Ignore Node.js dependencies and build artifacts
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+
 # Ignore OS generated files
 .DS_Store
 Thumbs.db
