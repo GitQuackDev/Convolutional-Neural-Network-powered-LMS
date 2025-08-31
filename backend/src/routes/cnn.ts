@@ -3,8 +3,11 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
+// All CNN routes require authentication
+router.use(authenticateToken as any);
+
 // Analyze uploaded content
-router.post('/analyze', authenticateToken as any, (req, res) => {
+router.post('/analyze', (req, res) => {
   res.status(501).json({
     success: false,
     message: 'CNN analysis endpoint - to be implemented',

@@ -3,6 +3,9 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
+// All course routes require authentication
+router.use(authenticateToken as any);
+
 // Get all courses
 router.get('/', (req, res) => {
   res.status(200).json({
@@ -23,8 +26,8 @@ router.get('/:id', (req, res) => {
   });
 });
 
-// Create course (requires authentication)
-router.post('/', authenticateToken as any, (req, res) => {
+// Create course
+router.post('/', (req, res) => {
   res.status(501).json({
     success: false,
     message: 'Create course endpoint - to be implemented',

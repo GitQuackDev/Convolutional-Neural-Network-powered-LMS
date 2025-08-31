@@ -3,6 +3,9 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
+// All discussion routes require authentication
+router.use(authenticateToken as any);
+
 // Get discussions
 router.get('/', (req, res) => {
   res.status(200).json({
@@ -14,7 +17,7 @@ router.get('/', (req, res) => {
 });
 
 // Create discussion
-router.post('/', authenticateToken as any, (req, res) => {
+router.post('/', (req, res) => {
   res.status(501).json({
     success: false,
     message: 'Create discussion endpoint - to be implemented',

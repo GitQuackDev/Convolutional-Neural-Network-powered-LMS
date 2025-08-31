@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Eye, 
@@ -32,6 +33,7 @@ interface PasswordStrength {
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const { register, loading, error } = useAuth();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState<RegisterData>({
@@ -148,7 +150,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     
     try {
       await register(formData);
-      // AuthContext handles success redirect and toast
+      // Navigate to dashboard after successful registration
+      navigate('/dashboard');
     } catch (error) {
       // AuthContext handles error toast
       console.error('Registration error:', error);

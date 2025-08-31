@@ -3,6 +3,9 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
+// All assignment routes require authentication
+router.use(authenticateToken as any);
+
 // Get assignments
 router.get('/', (req, res) => {
   res.status(200).json({
@@ -14,7 +17,7 @@ router.get('/', (req, res) => {
 });
 
 // Submit assignment
-router.post('/:id/submit', authenticateToken as any, (req, res) => {
+router.post('/:id/submit', (req, res) => {
   res.status(501).json({
     success: false,
     message: 'Submit assignment endpoint - to be implemented',

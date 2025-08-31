@@ -35,7 +35,15 @@ model User {
   assignments       Assignment[]
   submissions       Submission[]
   discussions       Discussion[]
+  discussionReplies DiscussionReply[]
   analysisResults   CNNAnalysis[]
+  
+  // New analytics and communication relations
+  userAnalytics     UserAnalytics[]
+  sessionMetrics    SessionMetrics[]
+  aiAnalysisResults AIAnalysisResults[]
+  sentMessages      ChatMessage[]
+  notifications     Notification[]
   
   @@map("users")
 }
@@ -70,6 +78,7 @@ model Course {
   modules          CourseModule[]
   assignments      Assignment[]
   discussions      Discussion[]
+  chatMessages     ChatMessage[]
 
   @@map("courses")
 }
@@ -342,4 +351,120 @@ model SystemConfig {
   updatedAt DateTime @updatedAt
 
   @@map("system_config")
+}
+
+// Analytics Collections
+model UserAnalytics {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String   @db.ObjectId
+  sessionId           String   
+  pageViews           Json     // Page visit tracking
+  contentInteractions Json     // Clicks, time spent, scroll depth
+  cnnAnalysisUsage    Json     // CNN feature usage patterns
+  learningProgress    Json     // Progress metrics and achievements
+  timestamp           DateTime @default(now())
+  
+  user                User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId, timestamp])
+  @@map("user_analytics")
+}
+
+model SessionMetrics {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String   @db.ObjectId
+  sessionStart        DateTime
+  sessionEnd          DateTime?
+  activeTime          Int      // Active time in seconds
+  courseInteractions  Json     // Course-specific interactions
+  assignmentProgress  Json     // Assignment completion data
+  engagementScore     Float    // Calculated engagement metric
+  
+  user                User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId, sessionStart])
+  @@map("session_metrics")
+}
+
+model AIAnalysisResults {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  fileName              String
+  originalFileName      String
+  filePath              String
+  userId                String   @db.ObjectId
+  cnnResults            Json?    // Original CNN analysis results
+  gpt4Results           Json?    // GPT-4 analysis results
+  claudeResults         Json?    // Claude analysis results
+  geminiResults         Json?    // Gemini analysis results
+  consolidatedInsights  Json     // Combined AI insights
+  processingTime        Json     // Time breakdown per AI model
+  confidence            Float    // Overall confidence score
+  createdAt             DateTime @default(now())
+  
+  user                  User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId, fileName, createdAt])
+  @@map("ai_analysis_results")
+}
+
+// Communication Collections
+model ChatMessage {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  content     String
+  messageType MessageType @default(TEXT)
+  senderId    String      @db.ObjectId
+  courseId    String?     @db.ObjectId // Course context
+  channelId   String?     // Study group or specific channel
+  isEdited    Boolean     @default(false)
+  editedAt    DateTime?
+  readBy      String[]    @db.ObjectId // Array of user IDs who read message
+  createdAt   DateTime    @default(now())
+  
+  sender      User        @relation(fields: [senderId], references: [id])
+  course      Course?     @relation(fields: [courseId], references: [id])
+  
+  @@index([courseId, createdAt])
+  @@index([senderId, createdAt])
+  @@map("chat_messages")
+}
+
+enum MessageType {
+  TEXT
+  FILE
+  SYSTEM
+  ANNOUNCEMENT
+}
+
+model Notification {
+  id        String               @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String               @db.ObjectId
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?                // Additional notification data
+  isRead    Boolean              @default(false)
+  readAt    DateTime?
+  priority  NotificationPriority @default(NORMAL)
+  expiresAt DateTime?
+  createdAt DateTime             @default(now())
+  
+  user      User                 @relation(fields: [userId], references: [id])
+  
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  CNN_ANALYSIS_COMPLETE
+  PEER_CONNECTION
+  ASSIGNMENT_DUE
+  NEW_MESSAGE
+  SYSTEM_UPDATE
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }

@@ -4,9 +4,16 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
+import passport from 'passport';
 
 // Load environment variables
 dotenv.config();
+
+// Initialize passport configuration
+import './config/passport';
+
+// Import database configuration
+import { connectDatabase } from './config/database';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -29,7 +36,20 @@ const PORT = process.env['PORT'] || 5000;
 
 // Security middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
 }));
 
 // CORS configuration
@@ -50,6 +70,9 @@ if (process.env['NODE_ENV'] === 'development') {
 // Body parsing middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Initialize passport
+app.use(passport.initialize());
 
 // Rate limiting
 app.use(rateLimiter);
@@ -85,9 +108,8 @@ app.use(errorHandler);
 // Database connection and server startup
 const startServer = async () => {
   try {
-    // Temporarily comment out database connection for testing
-    // await connectDatabase();
-    console.log('⚠️ Database connection skipped for testing');
+    // Connect to database
+    await connectDatabase();
     
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);

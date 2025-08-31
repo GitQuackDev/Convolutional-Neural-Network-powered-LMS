@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onForgotPassword 
 }) => {
   const { login, loading, error } = useAuth();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<LoginCredentials>({
     email: '',
@@ -66,7 +68,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     
     try {
       await login(formData);
-      // AuthContext handles success redirect and toast
+      // Navigate to dashboard after successful login
+      navigate('/dashboard');
     } catch (error) {
       // AuthContext handles error toast
       console.error('Login error:', error);

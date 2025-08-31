@@ -1,474 +1,334 @@
-# Project Brief: LMS CNN Integration System
-
-*Document Status: In Progress*  
-*Created: August 30, 2025*  
-*Last Updated: August 30, 2025*
-
----
+# Project Brief: LMS CNN Integration
 
 ## Executive Summary
 
-**LMS CNN Integration System** is an innovative Learning Management System designed specifically for ICT/Tech education that combines traditional LMS functionality with advanced Convolutional Neural Network (CNN) intelligence. The system addresses the critical gap in educational technology where students and educators lack intelligent content analysis, personalized learning recommendations, and automated assessment capabilities.
+**LMS CNN Integration** is an intelligent Learning Management System designed specifically for ICT/Tech education that leverages Convolutional Neural Networks to transform how students and educators interact with visual learning content. The platform enables users to upload any document or image and receive comprehensive, AI-powered analysis, recommendations, and connections to relevant learning materials and peers.
 
-**Primary Problem:** Current LMS platforms provide static learning environments without intelligent content analysis, limiting students' ability to get comprehensive information about uploaded materials and preventing educators from providing personalized, data-driven feedback at scale.
+The system addresses the critical gap in current LMS platforms that treat uploaded content as static files, missing opportunities for intelligent content analysis, personalized learning recommendations, and automated peer connections. By combining traditional LMS functionality with CNN-powered content analysis, the platform creates a dynamic, interconnected learning ecosystem that adapts to individual learning patterns and facilitates organic knowledge sharing communities.
 
-**Target Market:** ICT/Tech educational institutions, students, and educators seeking an intelligent, collaborative learning environment with advanced AI-powered content analysis and social learning features.
+**Target Market:** ICT/Tech education institutions, students, and educators seeking enhanced visual learning experiences and AI-powered educational insights.
 
-**Key Value Proposition:** The first LMS to integrate CNN technology for universal content analysis - allowing any uploaded image or document to be automatically analyzed and enriched with comprehensive information, while providing intelligent learning analytics and fostering collaborative knowledge sharing through AI-powered social connections.
-
----
+**Key Value Proposition:** Transform any uploaded visual content into personalized learning opportunities while automatically connecting learners with complementary knowledge and shared interests.
 
 ## Problem Statement
 
 **Current State & Pain Points:**
 
-Educational institutions using traditional Learning Management Systems face multiple critical limitations that hinder effective ICT/Tech education:
+Traditional Learning Management Systems treat uploaded educational content as static files, creating several critical inefficiencies in ICT/Tech education:
 
-1. **Static Content Analysis:** When students upload images, documents, or technical diagrams, they receive no intelligent feedback or additional context about the content, forcing them to manually research related information.
+1. **Content Isolation:** When students upload network diagrams, code screenshots, or hardware images, these visual materials remain disconnected from learning analytics and peer connections
+2. **Generic Module Organization:** Course materials are often named generically ("ICT WEEK3 MODULE") rather than by actual topic, making relevant content discovery nearly impossible
+3. **Missed Learning Opportunities:** Visual content rich with educational potential (hardware photos, system architecture diagrams, UI mockups) provides no automated analysis or enhancement
+4. **Fragmented Social Learning:** Students working on similar topics remain unaware of each other, preventing organic study group formation and peer-to-peer knowledge transfer
 
-2. **Generic Learning Paths:** Existing LMS platforms provide one-size-fits-all learning experiences without analyzing individual student performance patterns, upload behaviors, or learning preferences to provide personalized recommendations.
-
-3. **Manual Assessment Overhead:** Professors spend excessive time manually reviewing visual assignments (network diagrams, code screenshots, system architecture drawings, UI mockups, handwritten reports) without automated assistance for initial assessment or feedback generation.
-
-4. **Fragmented Learning Resources:** Students struggle to discover relevant learning materials when module titles are generic (e.g., "ICT WEEK3 MODULE") rather than descriptive, leading to missed connections between related content.
-
-5. **Isolated Learning Experience:** Current systems lack intelligent social learning features that could connect students with similar interests, complementary knowledge gaps, or collaborative learning opportunities based on their actual learning behaviors.
-
-**Impact & Quantification:**
-- **Time Waste:** Students spend hours manually researching content they upload instead of receiving instant, comprehensive analysis
-- **Educational Gaps:** Lack of personalized feedback leads to unaddressed knowledge gaps and suboptimal learning outcomes
-- **Faculty Burden:** Manual assessment of visual/technical assignments creates bottlenecks in feedback delivery
-- **Resource Underutilization:** Valuable educational content remains undiscovered due to poor categorization and matching
+**Quantifiable Impact:**
+- Students spend excessive time searching for relevant learning materials across poorly organized course databases
+- Educators manually review and score visual assignments (network diagrams, handwritten reports) consuming significant time that could be spent on teaching
+- Learning communities remain artificially isolated, reducing collaborative learning opportunities that are proven to improve retention and understanding
 
 **Why Existing Solutions Fall Short:**
-Traditional LMS platforms (Moodle, Canvas, Blackboard) focus on content delivery and basic tracking but lack:
-- Intelligent content analysis capabilities
-- AI-powered personalization engines
-- Automated visual assessment tools
-- Social learning recommendation systems
+Current LMS platforms (Moodle, Canvas, Blackboard) focus on content delivery and basic analytics but lack intelligent content analysis capabilities. They cannot:
+- Understand what's actually contained in uploaded visual materials
+- Automatically connect students with shared learning interests
+- Provide real-time, context-aware feedback on visual learning content
+- Transform uploaded content into bidirectional knowledge sharing opportunities
 
 **Urgency & Importance:**
-With the rapid advancement of AI technology and increasing demand for personalized education, institutions need intelligent LMS solutions now to remain competitive and provide effective ICT/Tech education that prepares students for an AI-enhanced workforce.
-
----
+ICT/Tech education is increasingly visual and hands-on, yet educational technology hasn't evolved to support this reality. As AI capabilities become more accessible through free models and APIs, there's a critical window to transform educational experiences before students and educators become locked into existing inefficient workflows.
 
 ## Proposed Solution
 
 **Core Concept & Approach:**
 
-The LMS CNN Integration System combines the collaborative features of modern platforms (Skool.com's step-by-step progress tracking + Google Classroom's assignment management) with revolutionary CNN-powered intelligence to create an adaptive, intelligent learning ecosystem.
+The LMS CNN Integration platform combines traditional learning management functionality with intelligent visual content analysis to create a **bidirectional knowledge ecosystem**. The system transforms every uploaded image or document into an opportunity for enhanced learning, peer connection, and knowledge sharing.
 
-**Key Solution Components:**
+**Key Innovation - Universal Content Intelligence:**
+- **ANY uploaded visual content** (hardware photos, network diagrams, code screenshots, handwritten notes) triggers CNN analysis
+- **Intelligent Content Categorization** analyzes actual content rather than relying on file names or manual tags
+- **Multi-Source Knowledge Synthesis** combines external resources (Wikipedia API), internal course materials, and AI-generated suggestions
+- **Automatic Peer Matching** connects students based on content similarity and complementary knowledge gaps
 
-1. **Universal Content Intelligence Engine:**
-   - Any uploaded image or document triggers automatic CNN analysis
-   - Comprehensive information retrieval from external sources (Wikipedia API) and internal knowledge base
-   - Smart content categorization that analyzes actual content rather than relying on file names
-   - Hardware identification through object detection for ICT/Tech equipment images
+**Unique Differentiators:**
 
-2. **Intelligent Learning Analytics System:**
-   - Real-time performance pattern analysis with personalized study recommendations
-   - Automated detection of knowledge gaps with targeted intervention suggestions
-   - Engagement prediction algorithms that recommend relevant modules before students need them
-   - Visual assignment assessment with instant feedback for technical diagrams and code
+1. **Bidirectional Information Flow:** Unlike traditional LMS platforms where students only consume content, our system enables students to contribute knowledge through uploads that benefit other learners
 
-3. **Social Learning Intelligence:**
-   - Automatic study group formation based on content upload patterns and learning interests
-   - Bidirectional knowledge sharing where uploads contribute to collective learning database
-   - Peer connection recommendations for collaborative learning opportunities
-   - Community-driven content enrichment through anonymous discussion forums
+2. **Smart Module Matching:** Solves the "generic naming problem" by analyzing content of ALL system modules to recommend relevant materials regardless of how they're titled
 
-4. **Advanced User Experience:**
-   - OKLCH color theming system with automatic interface adaptation based on user preferences
-   - Multi-authentication options (Gmail, email, Google account)
-   - Comprehensive user role management (students, professors, admin, community moderators)
-   - Progressive learning paths with deadline management and submission tracking
+3. **Social Learning Automation:** Creates organic study groups and peer connections based on actual learning activity rather than manual enrollment
 
-**Key Differentiators:**
-- **First CNN-integrated LMS** specifically designed for ICT/Tech education
-- **Universal content analysis** - any upload becomes a learning opportunity
-- **Predictive learning recommendations** based on behavior patterns, not just completion tracking
-- **Intelligent social learning** that connects students through actual learning behaviors
-- **Free AI model integration** making advanced features accessible without high operational costs
+4. **Real-Time Learning Enhancement:** Provides contextual feedback and suggestions as students interact with visual content
 
 **Why This Solution Will Succeed:**
-- Addresses specific pain points in technical education where visual content is prevalent
-- Leverages proven free AI models and APIs to minimize costs while maximizing capabilities
-- Combines successful features from existing platforms (Skool.com + Google Classroom) with unique AI intelligence
-- Focuses on ICT/Tech niche where visual content analysis provides maximum value
+
+- **Leverages Free AI Models:** Uses accessible technology (Hugging Face, OpenRouter API) making implementation feasible without massive AI infrastructure investment
+- **Addresses Real Pain Points:** Solves specific, documented problems in ICT/Tech education workflow
+- **Network Effects:** Value increases as more users contribute content, creating sustainable engagement
+- **Foundation-First Approach:** Builds on solid LMS core before adding AI features, ensuring practical usability
 
 **High-Level Product Vision:**
-A comprehensive learning ecosystem where every interaction is enhanced by AI intelligence, creating a continuously improving educational environment that adapts to each learner's needs while fostering collaborative knowledge creation and sharing.
-
----
+A learning platform where uploading a photo of a computer motherboard automatically provides component identification, assembly guides, connects you with peers studying hardware, and suggests relevant course modules - all while contributing to the collective knowledge base for future learners.
 
 ## Target Users
 
 ### Primary User Segment: ICT/Tech Students
 
 **Demographic Profile:**
-- **Age Range:** 16-25 years old (high school to university level)
-- **Education Level:** Secondary to tertiary education in ICT, Computer Science, Information Technology, Engineering
-- **Technical Proficiency:** Moderate to advanced digital literacy, comfortable with online learning platforms
-- **Geographic Scope:** Initially focused on English-speaking educational institutions
+- Age range: 16-35 years old
+- Educational level: High school through university and professional development
+- Technical comfort: Moderate to high digital literacy
+- Learning style: Visual and hands-on learners who work with diagrams, code, and hardware
 
 **Current Behaviors & Workflows:**
-- Upload assignments, diagrams, and technical documents to traditional LMS platforms
-- Manually research technical concepts and hardware specifications outside the LMS
-- Struggle to find relevant learning materials due to poor content categorization
-- Often work in isolation without connecting with peers studying similar topics
-- Spend significant time seeking additional context for uploaded technical content
+- Frequently upload screenshots of code, network diagrams, and hardware photos for assignments
+- Struggle to find relevant learning materials when course modules have generic names
+- Work independently on technical projects without awareness of peers studying similar topics
+- Spend significant time searching for external resources to supplement course materials
+- Create personal notes and diagrams that could benefit other students but remain isolated
 
 **Specific Needs & Pain Points:**
-- **Instant Content Analysis:** Need immediate, comprehensive information about uploaded technical images/documents
-- **Personalized Learning Paths:** Require adaptive recommendations based on their performance and learning patterns
-- **Collaborative Learning:** Want to connect with peers who have similar interests or complementary knowledge
-- **Visual Feedback:** Need intelligent assessment of technical diagrams, code, and visual assignments
-- **Resource Discovery:** Struggle to find relevant modules and materials in poorly organized systems
+- Need instant feedback on visual assignments (network diagrams, system architecture)
+- Want to connect with peers working on similar technical challenges
+- Require personalized learning recommendations based on their actual progress and interests
+- Need comprehensive information about technical topics from multiple sources in one place
+- Want to contribute their knowledge and help other students while learning
 
 **Goals They're Trying to Achieve:**
-- Master ICT/Tech concepts efficiently through personalized, adaptive learning
-- Get comprehensive understanding of technical topics beyond basic course materials
-- Connect with study partners and learning communities based on actual interests
-- Receive immediate feedback on visual/technical assignments to improve quickly
-- Build practical skills through intelligent content analysis and recommendations
+- Master complex technical concepts through visual and practical learning
+- Build professional networks with peers who share similar technical interests
+- Access comprehensive, reliable information about technology topics quickly
+- Receive timely feedback on their work to improve learning outcomes
+- Contribute to a learning community and gain recognition for their knowledge
 
 ### Secondary User Segment: ICT/Tech Educators
 
 **Demographic Profile:**
-- **Role:** Professors, instructors, teaching assistants in ICT/Tech programs
-- **Experience Level:** Varying from new educators to seasoned professionals
-- **Institution Type:** High schools, universities, technical colleges, training centers
-- **Class Sizes:** Managing 20-200+ students per course
+- Age range: 25-65 years old
+- Professional role: Teachers, professors, training coordinators, industry trainers
+- Technical expertise: Varies from moderate to expert level
+- Teaching experience: Mix of traditional and technology-enhanced instruction
 
 **Current Behaviors & Workflows:**
-- Manually review and assess large volumes of visual/technical assignments
-- Create and organize course materials with limited intelligent categorization tools
-- Track student progress through basic metrics without predictive analytics
-- Spend excessive time providing individual feedback on technical submissions
-- Struggle to identify students who need intervention before they fall behind
+- Manually review and score visual assignments (code screenshots, network diagrams, hardware projects)
+- Create and organize course materials with limited ability to track actual content topics
+- Struggle to identify which students would benefit from specific learning materials
+- Spend significant time providing individual feedback on visual assignments
+- Limited visibility into student collaboration and peer learning opportunities
 
 **Specific Needs & Pain Points:**
-- **Automated Assessment Support:** Need intelligent analysis of visual assignments to speed up grading
-- **Student Performance Insights:** Require predictive analytics to identify struggling students early
-- **Content Organization:** Need smart categorization of course materials beyond manual tagging
-- **Personalized Recommendations:** Want to provide targeted learning resources based on individual student needs
-- **Efficient Feedback Delivery:** Need tools to provide comprehensive feedback at scale
+- Need automated assistance with visual assignment assessment and scoring
+- Want to identify students who are excelling or struggling in specific topic areas
+- Require better organization and categorization of course materials beyond generic naming
+- Need efficient ways to provide personalized learning recommendations to students
+- Want to facilitate peer connections and study groups without manual coordination
 
 **Goals They're Trying to Achieve:**
 - Improve learning outcomes through personalized, data-driven instruction
-- Reduce time spent on routine assessment tasks to focus on high-value teaching activities
-- Identify and support struggling students before they fail
-- Create engaging, adaptive learning experiences that respond to student needs
-- Build comprehensive course materials that automatically connect and cross-reference
-
----
+- Reduce time spent on administrative tasks to focus more on teaching
+- Create more engaging and collaborative learning environments
+- Better understand student progress and learning patterns
+- Facilitate effective peer-to-peer learning opportunities
 
 ## Goals & Success Metrics
 
 ### Business Objectives
-- **User Adoption:** Achieve 1,000+ active students within first 6 months of launch
-- **Engagement Rate:** Maintain 80%+ weekly active user rate among enrolled students
-- **Content Analysis Volume:** Process 10,000+ uploaded documents/images monthly through CNN analysis
-- **Institution Partnerships:** Secure partnerships with 5+ ICT/Tech educational institutions within first year
-- **Revenue Growth:** Generate sustainable revenue through institutional licensing by month 12
+
+- **User Adoption:** Achieve 1,000 active student users and 50 educator users within 6 months of Phase 1 launch
+- **Content Intelligence Value:** Process 10,000+ uploaded visual materials with CNN analysis within first year
+- **Network Effects:** Generate 500+ automated peer connections based on content similarity per month by Phase 4
+- **Cost Efficiency:** Reduce educator time spent on visual assignment review by 40% through automated analysis tools
+- **Platform Engagement:** Maintain 70%+ monthly active user rate among registered students and educators
 
 ### User Success Metrics
-- **Learning Outcome Improvement:** 25% increase in student performance metrics compared to traditional LMS usage
-- **Content Discovery Rate:** 60%+ of users discover new relevant learning materials through CNN recommendations
-- **Social Learning Engagement:** 40%+ of students participate in AI-recommended study connections
-- **Time-to-Information:** Reduce student research time by 70% through instant content analysis
-- **Educator Efficiency:** 50% reduction in manual assessment time for visual/technical assignments
+
+- **Learning Outcome Improvement:** Students using CNN-enhanced content show 25% better performance on visual assignments compared to traditional LMS users
+- **Content Discovery Efficiency:** Students find relevant learning materials 60% faster through intelligent content categorization vs. generic module browsing
+- **Peer Learning Activation:** 40% of students participate in automatically suggested study groups or peer connections
+- **Knowledge Contribution:** Students contribute an average of 3+ pieces of educational content that benefit other learners per semester
+- **Real-Time Learning Enhancement:** Students receive actionable feedback within 30 seconds of uploading visual content
 
 ### Key Performance Indicators (KPIs)
-- **CNN Analysis Accuracy:** 90%+ accuracy rate in content categorization and information retrieval
-- **User Satisfaction Score:** Maintain 4.5+ star rating across student and educator user groups
-- **Platform Uptime:** 99.5%+ system availability during peak educational periods
-- **Feature Adoption Rate:** 75%+ of users actively utilizing core CNN features within 30 days
-- **Knowledge Base Growth:** 500+ new learning connections created monthly through content analysis
 
----
+- **CNN Analysis Accuracy:** 85%+ accuracy rate for content categorization and topic identification of uploaded materials
+- **User Engagement:** Average session duration increases 50% compared to traditional LMS platforms due to enhanced interactivity
+- **Content Upload Velocity:** 2x increase in student content uploads due to bidirectional value creation
+- **Automated Assessment Efficiency:** 70% reduction in time required for visual assignment grading through CNN-assisted evaluation
+- **Social Learning Connections:** Generate 100+ meaningful peer connections per month through content-based matching algorithms
+- **Resource Utilization:** 90%+ uptime for free model APIs (Hugging Face, OpenRouter) ensuring consistent CNN functionality
+- **Knowledge Base Growth:** Accumulate 5,000+ categorized educational content items within platform database by end of Phase 3
 
 ## MVP Scope
 
 ### Core Features (Must Have)
 
-- **User Authentication & Role Management:** Multi-authentication system (Gmail, email, Google account) with comprehensive role-based access control for students, professors, admins, community moderators, and regular moderators
-
-- **Basic LMS Foundation:** Course creation and management system with Skool.com-style step-by-step progress tracking combined with Google Classroom-style assignment submission and grading workflows
-
-- **Discussion Forum System:** Anonymous-capable discussion forums with community moderation features, enabling school-wide communication and Q&A functionality
-
-- **CNN Content Analysis Engine:** Core image/document upload functionality with basic CNN analysis, Wikipedia API integration, and simple content categorization using free Hugging Face models (YOLOv8, ResNet-50)
-
-- **Assignment Management:** Professor-controlled deadline management, student submission tracking, late submission restrictions, and comprehensive grading capabilities with "mark as done" functionality
-
-- **Comprehensive Grading Management System:** Advanced grading center with multiple grading methods, rubric creation and management, bulk grading operations, grade curve adjustments, weighted grade categories, and automated grade calculations. Professors can create detailed rubrics with multiple criteria and performance levels, apply rubrics consistently across assignments, and provide both numerical scores and qualitative feedback. The system supports point-based, percentage-based, and letter-grade scales, with automatic conversion between formats. Grade categories (assignments, quizzes, projects, participation) can be weighted differently in final course calculations. Bulk operations include applying grades to multiple students, copying grades across similar assignments, and exporting grade reports for institutional record-keeping. Late submission penalties are automatically calculated based on professor-defined policies. The grading interface provides side-by-side view of student submissions with CNN analysis results to assist in technical assignment evaluation. Grade distribution analytics help professors identify when assignments may be too difficult or need curve adjustments. Students receive detailed feedback through the platform with grade history and progress tracking toward course objectives.
-
-- **Basic Data Visualization Dashboard:** Simple analytics dashboards for students (progress tracking, grades) and professors (class overview, student performance)
-
-- **OKLCH Color Theming System:** Advanced color theming with automatic interface adaptation based on user-selected base colors, implementing modern CSS color functions
-
-- **Profile Management:** User profile creation, editing, profile picture upload, password reset functionality, and basic information management
+- **User Authentication System:** Gmail, email, and Google account integration with role-based access (students, professors, admin, community admin, moderators)
+- **Basic Course Management:** Create, organize, and manage courses with enrollment capabilities and basic progress tracking
+- **Discussion Forums:** Traditional discussion board functionality for course-related conversations and Q&A
+- **Assignment Submission System:** Upload and submit assignments with basic file handling and submission tracking
+- **OKLCH Color Theming:** Modern, accessible color system for consistent visual design and user experience
+- **Content Upload Interface:** Basic file upload functionality for images and documents with preview capabilities
+- **User Profile Management:** Basic profile creation, editing, and viewing with role-specific permissions
+- **Navigation System:** Intuitive navigation between courses, discussions, assignments, and user management areas
 
 ### Out of Scope for MVP
 
-- Advanced AI recommendations and predictive analytics
-- Social learning connections and automatic study group formation
-- Real-time feedback during content creation
+- CNN analysis and intelligent content categorization
+- Automated peer matching and social learning features
+- Real-time learning analytics and performance tracking
+- Advanced content recommendations and suggestions
+- Visual assignment automated scoring
+- Integration with external APIs (Wikipedia, OpenRouter)
+- Advanced data visualization dashboards
+- Engagement prediction algorithms
 - Bidirectional knowledge sharing workflows
-- Complex learning path personalization
-- Advanced content analysis beyond basic categorization
-- Mobile application development
-- Multi-language support
-- Video conferencing integration
-- Advanced analytics and reporting features
 
 ### MVP Success Criteria
 
-**Technical Success:**
-- Successfully deploy working LMS with all core features functional
-- Achieve 95%+ uptime during testing period
-- Process basic CNN analysis for uploaded content with 80%+ accuracy
-- Support 100+ concurrent users without performance degradation
-
-**User Success:**
-- Complete user onboarding and basic course workflow from student and professor perspectives
-- Demonstrate working CNN analysis pipeline with Wikipedia integration
-- Validate core LMS functionality matches Skool.com + Google Classroom hybrid model
-- Confirm OKLCH theming system provides visually appealing, accessible interface
-
-**Business Success:**
-- Proof of concept ready for institutional demonstration
-- Technical foundation established for Phase 2 AI feature integration
-- User feedback collected for feature prioritization and refinement
-- Development timeline and resource requirements validated for scaling
-
----
+**MVP will be considered successful when:**
+- Users can successfully register, authenticate, and access appropriate features based on their roles
+- Students can enroll in courses, participate in discussions, and submit assignments seamlessly
+- Educators can create courses, manage student enrollment, and review submitted assignments
+- The platform demonstrates stable performance with 50+ concurrent users
+- Core user workflows (course creation, assignment submission, discussion participation) complete without technical issues
+- User interface provides intuitive navigation with positive user feedback on usability testing
+- Foundation architecture supports planned CNN integration features in subsequent phases
 
 ## Post-MVP Vision
 
 ### Phase 2 Features
 
-**Intelligent Learning Analytics Implementation:**
-- **Predictive Learning Recommendations:** Deploy engagement prediction algorithms that analyze user upload patterns, performance data, and interaction behaviors to suggest relevant modules before students need them
-- **Advanced Performance Analytics:** Implement real-time learning pattern analysis with automated intervention suggestions when students show signs of struggling or disengagement
-- **Visual Assignment Assessment:** Integrate advanced CNN models for automated analysis of network diagrams, code screenshots, system architecture drawings, and UI mockups with detailed feedback generation
-
-**Enhanced Content Intelligence:**
-- **Bidirectional Knowledge Sharing:** Enable uploads to contribute to collective learning database, where student submissions become resources for other learners
-- **Advanced Content Categorization:** Implement sophisticated content analysis that connects related materials across courses and suggests cross-topic learning opportunities
-- **Hardware Identification Enhancement:** Expand object detection capabilities to provide detailed component analysis, assembly guides, and troubleshooting resources for ICT equipment
+**Enhanced LMS Features (6-12 months post-MVP):**
+- **Skool.com-style Progress Tracking:** Step-by-step visual progress indicators showing completion status across course modules and learning paths
+- **Google Classroom-style Module Uploads:** Streamlined content creation and distribution tools for educators with drag-and-drop functionality
+- **Quiz/Exam Creation and Grading:** Comprehensive assessment tools with automated grading for multiple choice, short answer, and basic visual questions
+- **Deadline Management:** Integrated calendar system with notifications, reminders, and deadline tracking for assignments and assessments
+- **Data Visualization Dashboards:** Basic analytics showing course completion rates, student engagement metrics, and assignment submission patterns
+- **Enhanced Profile Management:** Expanded user profiles with learning preferences, skill tracking, and achievement systems
 
 ### Long-term Vision
 
-**Comprehensive AI-Powered Learning Ecosystem (Years 1-2):**
-- **Social Learning Intelligence:** Full implementation of automatic study group formation, peer learning recommendations, and collaborative knowledge networks based on learning behaviors and content interactions
-- **Adaptive Learning Paths:** Dynamic course progression that adjusts based on individual learning patterns, providing personalized learning journeys that adapt in real-time
-- **Multi-Modal Content Analysis:** Expansion beyond images and documents to include video analysis, code repository integration, and interactive simulation assessment
-- **Advanced Analytics Platform:** Comprehensive learning analytics dashboard providing institutional-level insights for educational administrators and policy makers
+**The Future Learning Ecosystem (2-3 years):**
+
+Transform ICT/Tech education through an AI-powered platform where every piece of visual content becomes a gateway to personalized learning experiences. Students will upload any tech-related image or document and instantly receive comprehensive analysis, relevant learning materials, and connections to peers with complementary knowledge.
+
+**Key Vision Elements:**
+- **Universal Content Intelligence:** Any uploaded visual content automatically triggers multi-layered analysis providing educational context, related resources, and learning recommendations
+- **Organic Knowledge Communities:** Students naturally form study groups and learning partnerships based on their actual learning activities and content interests rather than manual enrollment
+- **Predictive Learning Analytics:** The system anticipates learning needs, identifies knowledge gaps, and proactively suggests interventions before students fall behind
+- **Seamless Knowledge Flow:** Content uploaded by one student automatically benefits others, creating a self-improving educational ecosystem
 
 ### Expansion Opportunities
 
-**Market Expansion:**
-- **Multi-Discipline Support:** Extend CNN capabilities beyond ICT/Tech to other visual-heavy disciplines (Engineering, Medicine, Design, Architecture)
-- **K-12 Educational Markets:** Adapt platform for younger learners with age-appropriate interfaces and content analysis
-- **Corporate Training Markets:** Enterprise version for technical skills training in professional development contexts
+**Horizontal Expansion:**
+- **Multi-Domain Education:** Extend beyond ICT/Tech to other visual-heavy disciplines (engineering, design, medical education, sciences)
+- **Professional Training Markets:** Corporate training programs, certification courses, and continuing education sectors
+- **International Markets:** Localization for different educational systems and languages
 
-**Technology Integration:**
-- **Virtual Reality Learning:** Integration with VR platforms for immersive technical education experiences
-- **IoT Device Integration:** Connect with physical lab equipment and IoT devices for real-time data collection and analysis
-- **Blockchain Credentialing:** Implement blockchain-based certification and skill verification systems
+**Vertical Integration:**
+- **Content Creation Tools:** AI-assisted course material generation and visual content enhancement
+- **Assessment Services:** Automated proctoring and advanced assignment evaluation capabilities
+- **Learning Analytics Platform:** Standalone analytics service for educational institutions
 
-**Global Expansion:**
-- **Multi-Language Support:** Internationalization with AI-powered translation and localization
-- **Regional Content Adaptation:** Culturally adapted content recommendations and educational approach customization
-- **Developing Market Access:** Optimized versions for lower-bandwidth environments and offline-capable functionality
-
----
+**Technology Evolution:**
+- **Advanced AI Models:** Integration of more sophisticated models as they become available through free tiers
+- **Real-time Collaboration:** Live collaborative learning sessions with shared visual content analysis
+- **Mobile-First Experience:** Native mobile applications optimizing CNN analysis for smartphone cameras
 
 ## Technical Considerations
 
 ### Platform Requirements
-- **Target Platforms:** Web-based application (responsive design for desktop, tablet, mobile browsers)
-- **Browser/OS Support:** Modern browsers supporting ES2020+ and CSS Grid/Flexbox (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
-- **Performance Requirements:** Sub-3-second page load times, real-time CNN analysis responses within 10 seconds, support for 100+ concurrent users
+
+- **Target Platforms:** Web-based application with responsive design for desktop, tablet, and mobile access
+- **Browser/OS Support:** Modern browsers (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+) across Windows, macOS, Linux, iOS, and Android
+- **Performance Requirements:** 
+  - Page load times under 3 seconds for core functionality
+  - CNN analysis response times under 30 seconds for typical educational content
+  - Support for concurrent file uploads up to 50MB per file
+  - Real-time updates for discussion forums and collaborative features
 
 ### Technology Preferences
 
-**Frontend:**
-- **Framework:** React with TypeScript (already implemented in current structure)
-- **Build Tool:** Vite (already configured)
-- **Styling:** TailwindCSS with OKLCH color support for advanced theming
-- **UI Components:** Shadcn/ui components (already configured) for consistent, accessible component library
-- **State Management:** React Query for server state, Zustand or Context API for client state
-
-**Backend:**
-- **Runtime:** Node.js with Express.js or Fastify for API development
-- **Database:** MongoDB for flexible document storage (users, courses, assignments, analysis results) + Redis for caching and session management
-- **Authentication:** Auth0 or Firebase Auth for multi-provider authentication (Gmail, Google, email)
-- **File Storage:** AWS S3 or Cloudinary for image/document storage with CDN distribution
-
-**AI/ML Integration:**
-- **CNN Models:** Hugging Face Transformers with free models (YOLOv8, ResNet-50, DETR)
-- **AI API:** OpenRouter API for text generation and content suggestions
-- **External Data:** Wikipedia API for information enrichment
-- **OCR Processing:** Tesseract.js or Google Cloud Vision API (free tier)
+- **Frontend:** React 18+ with TypeScript, Vite build system, Tailwind CSS for styling, shadcn/ui component library
+- **Backend:** Node.js with TypeScript, Express.js framework, Prisma ORM for database management
+- **Database:** MongoDB for document-based data storage (users, courses, assignments, CNN analysis results), with potential Redis for caching and session management
+- **Hosting/Infrastructure:** Initial deployment on Vercel (frontend) and Railway/Render (backend), with planned migration to AWS or Google Cloud for scalability
 
 ### Architecture Considerations
 
-**Repository Structure:**
-- **Monorepo Approach:** Single repository with separate frontend and backend directories (current structure works well)
-- **Shared Types:** TypeScript definitions shared between frontend and backend
-- **API Documentation:** OpenAPI/Swagger for API specification and testing
-- **Testing Strategy:** Jest + React Testing Library for frontend, Supertest for backend API testing
-
-**Service Architecture:**
-- **Microservices Approach:** Separate services for core LMS, CNN analysis, user management, and content storage
-- **API Gateway:** Single entry point for frontend with routing to appropriate microservices
-- **Message Queue:** Redis or AWS SQS for handling CNN analysis jobs asynchronously
-- **Caching Layer:** Redis for frequently accessed data and session management
-
-**Integration Requirements:**
-- **CNN Processing Pipeline:** Asynchronous job queue for image/document analysis with progress tracking
-- **Real-time Features:** WebSocket connections for live discussion forums and real-time notifications
-- **External API Integration:** Robust error handling and fallback strategies for Wikipedia and AI API calls
-- **Database Design:** MongoDB document structure optimized for flexible data storage (user profiles, course content, learning paths, analysis results) with proper indexing for performance
-
-**Security/Compliance:**
-- **Data Protection:** GDPR-compliant data handling with user consent management
-- **Authentication Security:** JWT tokens with refresh token rotation, rate limiting, and brute force protection
-- **File Upload Security:** Virus scanning, file type validation, and size limits for user uploads
-- **API Security:** CORS configuration, input validation, and SQL injection protection
-- **Privacy:** Anonymous discussion forum capabilities with optional identity disclosure
-
----
+- **Repository Structure:** Monorepo structure with separate frontend and backend directories, shared TypeScript types, and centralized configuration
+- **Service Architecture:** 
+  - Microservices approach with separate services for authentication, course management, content analysis, and social features
+  - API-first design with RESTful endpoints and potential GraphQL integration for complex queries
+  - Event-driven architecture for real-time features and CNN processing workflows
+- **Integration Requirements:**
+  - **Free AI Models:** Hugging Face Transformers API integration for CNN analysis (YOLOv8, DETR-ResNet-50, ViT models)
+  - **External APIs:** Wikipedia API for content enhancement, OpenRouter API for text generation and suggestions
+  - **Authentication:** OAuth 2.0 integration with Google, GitHub, and standard email/password authentication
+- **Security/Compliance:**
+  - GDPR and FERPA compliance for educational data privacy
+  - End-to-end encryption for sensitive user data and course materials
+  - Role-based access control (RBAC) with fine-grained permissions
+  - File upload security with virus scanning and content validation
+  - Rate limiting and DDoS protection for API endpoints
 
 ## Constraints & Assumptions
 
 ### Constraints
 
-**Budget:**
-- **Development Resources:** Limited to free/open-source technologies and services
-- **AI/ML Services:** Restricted to free tiers of Hugging Face models and OpenRouter API
-- **Infrastructure:** Initial deployment on free/low-cost hosting solutions (Vercel, Netlify, Railway)
-- **External APIs:** Limited to free services like Wikipedia API and free tiers of cloud services
-
-**Timeline:**
-- **MVP Development:** Target 3-6 months for core LMS functionality with basic CNN integration
-- **Phase 2 Implementation:** Additional 6-9 months for advanced AI features and social learning
-- **Resource Availability:** Development constrained by team availability and educational deadlines
-
-**Resources:**
-- **Team Size:** Small development team (likely 1-3 developers)
-- **AI/ML Expertise:** Limited machine learning background, relying on pre-trained models and APIs
-- **Infrastructure Management:** Minimal DevOps experience, requiring simple deployment solutions
-- **User Testing:** Limited access to large-scale educational institution partnerships for testing
-
-**Technical:**
-- **Model Training:** Cannot create custom CNN models or collect training datasets
-- **AI Processing:** Dependent on external API rate limits and service availability
-- **Scalability:** Initial architecture must handle growth without major rewrites
-- **Browser Support:** Must work across diverse educational institution technology environments
+- **Budget:** Limited to free-tier AI models and APIs (Hugging Face, OpenRouter) with minimal infrastructure costs during MVP and early phases
+- **Timeline:** 18-month development roadmap spanning 5 phases, with MVP targeted for completion within 6 months
+- **Resources:** Small development team (likely 1-3 developers) requiring technology choices that maximize productivity and minimize complexity
+- **Technical:** Restricted to free AI models and datasets only - no custom model training or premium API access during initial phases
 
 ### Key Assumptions
 
-- **Market Demand:** ICT/Tech educators and students will value intelligent content analysis over traditional LMS features
-- **Technology Adoption:** Educational institutions are ready to adopt AI-enhanced learning platforms
-- **User Behavior:** Students will actively upload content for analysis rather than passive consumption
-- **AI Accuracy:** Free AI models will provide sufficient accuracy for educational content analysis (80%+ target)
-- **External Service Reliability:** Wikipedia API and OpenRouter will maintain stable, free access
-- **Educational Integration:** Institutions will allow anonymous discussion forums and AI-powered features
-- **Content Volume:** Sufficient user-generated content will be available to enable social learning features
-- **Performance Requirements:** Basic web hosting will handle CNN analysis processing loads
-- **Regulatory Compliance:** Standard web application security practices will meet educational data protection requirements
-- **User Technical Skills:** Target users have sufficient technical literacy to engage with AI-enhanced features
-- **Scalability Path:** Architecture designed for easy migration from free to paid service tiers as user base grows
-- **Commercial Viability:** Revenue model through institutional licensing will support transition to premium AI services and infrastructure
-
----
+- **User Adoption:** ICT/Tech students and educators will actively upload visual content when they see immediate value from intelligent analysis
+- **Content Quality:** Uploaded educational content will be sufficiently clear and relevant for CNN analysis to provide meaningful insights
+- **Free Model Performance:** Available free AI models (YOLOv8, DETR-ResNet-50) will provide adequate accuracy for educational content categorization
+- **API Reliability:** Free-tier external APIs (Hugging Face, Wikipedia, OpenRouter) will maintain sufficient uptime and rate limits for user needs
+- **Network Effects:** Once users experience peer connections and content recommendations, they will increase platform engagement and content contribution
+- **Educational Institution Interest:** Schools and training organizations will recognize value in CNN-enhanced learning and support platform adoption
+- **Technology Evolution:** Free AI model capabilities will continue improving, enabling more sophisticated features in later phases
+- **User Behavior:** Students will be willing to contribute their own educational content when they see others benefiting from their uploads
+- **Scale Feasibility:** The platform can achieve meaningful social learning effects with hundreds rather than thousands of users initially
 
 ## Risks & Open Questions
 
 ### Key Risks
 
-- **AI Service Dependency:** Heavy reliance on external AI APIs creates single points of failure and potential cost escalation as user base grows
-- **Free Tier Limitations:** OpenRouter API and Hugging Face model limits may be exceeded faster than revenue generation, requiring early transition to paid tiers
-- **Educational Institution Adoption:** Conservative educational sector may resist AI-enhanced platforms due to privacy concerns or institutional policies
-- **Content Analysis Accuracy:** Free AI models may not provide sufficient accuracy for educational content, potentially undermining core value proposition
-- **Technical Complexity:** CNN integration complexity may exceed development team capabilities without machine learning expertise
-- **User Engagement:** Students may not actively upload content for analysis, limiting the effectiveness of social learning features
-- **Competition:** Established LMS providers (Canvas, Moodle) may rapidly integrate similar AI features, eroding competitive advantage
-- **Data Privacy Regulations:** Educational data protection requirements may limit AI analysis capabilities or require expensive compliance measures
+- **Free Model Limitations:** CNN analysis accuracy may be insufficient for educational content, leading to poor user experience and low adoption
+- **API Dependency:** Reliance on free external APIs creates vulnerability to service changes, rate limiting, or availability issues
+- **Network Effects Threshold:** Platform may fail to reach critical mass needed for valuable peer connections and social learning features
+- **Educational Market Adoption:** Conservative educational institutions may be slow to adopt AI-powered learning tools due to privacy or reliability concerns
+- **Technical Complexity:** CNN integration complexity may exceed development team capabilities within timeline and budget constraints
+- **Content Moderation:** User-generated visual content may require moderation capabilities not accounted for in free-tier solutions
 
 ### Open Questions
 
-- How will the platform handle AI analysis costs as user base scales beyond free tier limits?
-- What specific accuracy thresholds are required for CNN analysis to provide educational value?
-- How will educational institutions respond to AI-powered anonymous discussion forums?
-- What revenue model will sustain the transition from free to paid AI services?
-- How will the platform differentiate from existing AI-enhanced educational tools?
-- What technical architecture changes are needed to support enterprise-level institutional deployments?
-- How will user data be managed across different international educational privacy regulations?
-- What backup strategies exist if primary AI service providers change terms or pricing?
+- How will the platform handle edge cases where CNN analysis fails or provides incorrect categorization?
+- What minimum user base is required to generate meaningful peer connections and study group suggestions?
+- How will the system ensure educational content quality and prevent spam or inappropriate uploads?
+- What backup plans exist if key free APIs become unavailable or change their terms of service?
+- How will the platform measure and validate actual learning outcome improvements versus traditional LMS usage?
+- What specific metrics will indicate readiness to progress from one development phase to the next?
 
 ### Areas Needing Further Research
 
-- **Competitive Analysis:** Comprehensive study of existing AI-enhanced LMS platforms and their feature sets
-- **Educational Institution Requirements:** Survey of ICT/Tech educational institutions regarding AI platform adoption criteria
-- **AI Model Performance:** Testing of free AI models against educational content to validate accuracy assumptions
-- **Revenue Model Validation:** Analysis of institutional licensing models and pricing strategies for educational technology
-- **Technical Feasibility:** Proof-of-concept development to validate CNN integration complexity and performance
-- **User Experience Research:** Prototype testing with actual students and educators to validate feature assumptions
-- **Regulatory Compliance:** Legal review of educational data protection requirements across target markets
-- **Scalability Planning:** Infrastructure cost modeling for growth scenarios and service tier transitions
-
----
+- **User Acceptance Testing:** Conduct usability studies with ICT/Tech students and educators to validate core assumptions about visual content interaction
+- **CNN Model Benchmarking:** Test accuracy of available free models on representative educational content to establish performance baselines
+- **Competitive Analysis:** Detailed analysis of existing LMS platforms and AI-powered educational tools to identify differentiation opportunities
+- **Educational Privacy Compliance:** Research specific FERPA and international data privacy requirements for AI-powered educational platforms
+- **Scalability Planning:** Technical architecture review to ensure CNN processing can scale with user growth within budget constraints
 
 ## Next Steps
 
 ### Immediate Actions
 
-1. **Technical Foundation Setup**
-   - Complete backend architecture design and initial API structure
-   - Set up MongoDB database schema design for users, courses, assignments, and CNN analysis results
-   - Configure authentication system with multi-provider support (Gmail, Google, email)
-   - Implement basic Shadcn/ui component library integration with OKLCH theming
-
-2. **MVP Core Development**
-   - Develop user registration and role management system
-   - Build basic course creation and management interface
-   - Implement discussion forum with anonymous posting capabilities
-   - Create assignment submission and deadline management features
-
-3. **CNN Integration Proof of Concept**
-   - Research and test Hugging Face model integration (YOLOv8, ResNet-50)
-   - Develop basic image upload and analysis pipeline
-   - Implement Wikipedia API integration for content enrichment
-   - Create simple content categorization system
-
-4. **Infrastructure & Deployment**
-   - Set up development, staging, and production environments
-   - Configure CI/CD pipeline for automated testing and deployment
-   - Implement basic monitoring and error tracking
-   - Plan scalability architecture for future paid service migration
-
-5. **User Testing & Validation**
-   - Create prototype for initial user testing with ICT/Tech students and educators
-   - Gather feedback on core LMS functionality and CNN analysis value
-   - Validate assumptions about content upload behaviors and social learning interest
-   - Refine feature priorities based on user feedback
+1. **Validate Technical Feasibility:** Set up proof-of-concept CNN analysis using Hugging Face models on sample educational content
+2. **User Research:** Conduct interviews with 10-15 ICT/Tech students and educators to validate problem assumptions and solution interest
+3. **Technical Architecture Planning:** Design detailed system architecture supporting phased development from MVP through CNN integration
+4. **Competitive Intelligence:** Complete comprehensive analysis of existing LMS solutions and AI-powered educational tools
+5. **MVP Feature Prioritization:** Finalize MVP feature specifications and create detailed user stories for development planning
 
 ### PM Handoff
 
-This Project Brief provides the full context for **LMS CNN Integration System**. Please start in 'PRD Generation Mode', review the brief thoroughly to work with the user to create the PRD section by section as the template indicates, asking for any necessary clarification or suggesting improvements.
-
-**Key Areas for PRD Development:**
-- Detailed user stories for each role (students, professors, admins, moderators)
-- Comprehensive API specifications for CNN integration
-- Technical implementation roadmap with milestone definitions
-- User interface mockups and interaction design specifications
-- Performance requirements and scalability planning
-- Testing strategy and quality assurance protocols
-
----
+This Project Brief provides the full context for **LMS CNN Integration**. Please start in 'PRD Generation Mode', review the brief thoroughly to work with the user to create the PRD section by section as the template indicates, asking for any necessary clarification or suggesting improvements.
