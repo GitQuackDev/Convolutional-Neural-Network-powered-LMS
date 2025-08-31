@@ -1,0 +1,345 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  email             String   @unique
+  password          String?  // Optional for OAuth users
+  firstName         String
+  lastName          String
+  avatar            String?
+  role              UserRole @default(STUDENT)
+  isEmailVerified   Boolean  @default(false)
+  emailVerificationToken String?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  googleId          String?  @unique
+  lastLogin         DateTime?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  courses           CourseEnrollment[]
+  ownedCourses      Course[] @relation("CourseOwner")
+  assignments       Assignment[]
+  submissions       Submission[]
+  discussions       Discussion[]
+  analysisResults   CNNAnalysis[]
+  
+  @@map("users")
+}
+
+enum UserRole {
+  STUDENT
+  PROFESSOR
+  ADMIN
+  COMMUNITY_MODERATOR
+  REGULAR_MODERATOR
+}
+
+// Course Management
+model Course {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  title            String
+  description      String
+  syllabus         String?
+  coverImage       String?
+  isPublic         Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  maxStudents      Int?
+  estimatedHours   Int?
+  difficulty       CourseDifficulty @default(BEGINNER)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  ownerId          String   @db.ObjectId
+  owner            User     @relation("CourseOwner", fields: [ownerId], references: [id])
+  enrollments      CourseEnrollment[]
+  modules          CourseModule[]
+  assignments      Assignment[]
+  discussions      Discussion[]
+
+  @@map("courses")
+}
+
+enum CourseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+model CourseEnrollment {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  enrolledAt   DateTime @default(now())
+  completedAt  DateTime?
+  progress     Float    @default(0) // 0-1
+  isActive     Boolean  @default(true)
+
+  // Relations
+  userId       String   @db.ObjectId
+  courseId     String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id])
+  course       Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@map("course_enrollments")
+}
+
+model CourseModule {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  title             String
+  description       String?
+  content           String?  // HTML content
+  order             Int
+  estimatedMinutes  Int      @default(30)
+  isRequired        Boolean  @default(true)
+  isLocked          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  courseId          String   @db.ObjectId
+  course            Course   @relation(fields: [courseId], references: [id])
+  steps             CourseStep[]
+
+  @@map("course_modules")
+}
+
+model CourseStep {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  title                String
+  content              String?  // HTML content
+  type                 StepType
+  order                Int
+  estimatedTime        Int      @default(15) // minutes
+  isRequired           Boolean  @default(true)
+  cnnAnalysisEnabled   Boolean  @default(false)
+  resources            Json?    // Additional resources/links
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  moduleId             String   @db.ObjectId
+  module               CourseModule @relation(fields: [moduleId], references: [id])
+
+  @@map("course_steps")
+}
+
+enum StepType {
+  CONTENT
+  VIDEO
+  UPLOAD
+  QUIZ
+  ASSIGNMENT
+  DISCUSSION
+}
+
+// Assignment Management
+model Assignment {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  title               String
+  description         String
+  instructions        String?
+  pointsWorth         Int      @default(100)
+  allowedAttempts     Int      @default(1)
+  acceptedFileTypes   String[] // ["jpg", "png", "pdf"]
+  maxFileSize         Int      @default(10485760) // 10MB in bytes
+  dueDate             DateTime?
+  availableFrom       DateTime @default(now())
+  availableUntil      DateTime?
+  allowLateSubmission Boolean  @default(false)
+  latePenaltyPercent  Float?   // Daily penalty as percentage
+  requiresCNNAnalysis Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  courseId            String   @db.ObjectId
+  professorId         String   @db.ObjectId
+  course              Course   @relation(fields: [courseId], references: [id])
+  professor           User     @relation(fields: [professorId], references: [id])
+  submissions         Submission[]
+  rubric              Rubric?
+
+  @@map("assignments")
+}
+
+model Submission {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  attemptNumber     Int      @default(1)
+  status            SubmissionStatus @default(DRAFT)
+  submittedAt       DateTime?
+  grade             Float?   // 0-100 or based on rubric
+  feedback          String?
+  isLate            Boolean  @default(false)
+  latePenaltyApplied Float?
+  files             SubmissionFile[]
+  cnnAnalysisResults Json?   // Store CNN analysis results
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  assignmentId      String   @db.ObjectId
+  studentId         String   @db.ObjectId
+  assignment        Assignment @relation(fields: [assignmentId], references: [id])
+  student           User     @relation(fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId, attemptNumber])
+  @@map("submissions")
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  GRADED
+  RETURNED
+}
+
+model SubmissionFile {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  originalName String
+  fileName     String   // Stored filename
+  filePath     String   // Full path to file
+  fileSize     Int
+  mimeType     String
+  uploadedAt   DateTime @default(now())
+
+  // Relations
+  submissionId String   @db.ObjectId
+  submission   Submission @relation(fields: [submissionId], references: [id])
+
+  @@map("submission_files")
+}
+
+// Grading System
+model Rubric {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  totalPoints Int
+  criteria    RubricCriteria[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  assignmentId String  @unique @db.ObjectId
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+
+  @@map("rubrics")
+}
+
+model RubricCriteria {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  maxPoints   Int
+  order       Int
+  levels      RubricLevel[]
+
+  // Relations
+  rubricId    String   @db.ObjectId
+  rubric      Rubric   @relation(fields: [rubricId], references: [id])
+
+  @@map("rubric_criteria")
+}
+
+model RubricLevel {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   // e.g., "Excellent", "Good", "Needs Improvement"
+  description String?
+  points      Int
+  order       Int
+
+  // Relations
+  criteriaId  String   @db.ObjectId
+  criteria    RubricCriteria @relation(fields: [criteriaId], references: [id])
+
+  @@map("rubric_levels")
+}
+
+// CNN Analysis & Content Intelligence
+model CNNAnalysis {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  fileName         String
+  originalFileName String
+  filePath         String
+  fileSize         Int
+  mimeType         String
+  confidence       Float    // Overall confidence score
+  analysisResults  Json     // Store full CNN analysis
+  wikipediaData    Json?    // Enriched Wikipedia information
+  categories       String[] // Auto-generated categories
+  tags             String[] // Auto-generated tags
+  processingTime   Int?     // Time taken for analysis in ms
+  modelVersions    Json?    // Track which models were used
+  createdAt        DateTime @default(now())
+
+  // Relations
+  userId           String   @db.ObjectId
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@map("cnn_analyses")
+}
+
+// Discussion Forums
+model Discussion {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
+  content      String
+  isAnonymous  Boolean  @default(false)
+  isPinned     Boolean  @default(false)
+  isLocked     Boolean  @default(false)
+  tags         String[]
+  viewCount    Int      @default(0)
+  replyCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  authorId     String?  @db.ObjectId // Nullable for anonymous posts
+  courseId     String?  @db.ObjectId // Nullable for general discussions
+  author       User?    @relation(fields: [authorId], references: [id])
+  course       Course?  @relation(fields: [courseId], references: [id])
+  replies      DiscussionReply[]
+
+  @@map("discussions")
+}
+
+model DiscussionReply {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  content        String
+  isAnonymous    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  discussionId   String   @db.ObjectId
+  authorId       String?  @db.ObjectId // Nullable for anonymous replies
+  discussion     Discussion @relation(fields: [discussionId], references: [id])
+  author         User?    @relation(fields: [authorId], references: [id])
+
+  @@map("discussion_replies")
+}
+
+// System Configuration
+model SystemConfig {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
+}
