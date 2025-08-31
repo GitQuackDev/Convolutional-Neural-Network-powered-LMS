@@ -74,8 +74,15 @@ export interface PasswordResetRequest {
   email: string;
 }
 
+export interface PasswordResetResponse {
+  success: boolean;
+  message: string;
+  resetToken?: string; // Development only
+  resetUrl?: string;   // Development only
+}
+
 export interface PasswordResetData {
   token: string;
   newPassword: string;
-  confirmPassword: string;
+  confirmPassword?: string;
 }

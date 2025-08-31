@@ -423,3 +423,140 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
     });
   }
 };
+
+// Forgot password - send reset email
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array(),
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      res.status(200).json({
+        success: true,
+        message: 'If an account with that email exists, you will receive a password reset link.',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Generate reset token (in production, use crypto.randomBytes)
+    const resetToken = jwt.sign(
+      { userId: user._id, email: user.email, purpose: 'password-reset' },
+      process.env['JWT_SECRET'] as string,
+      { expiresIn: '1h' }
+    );
+
+    // TODO: In production, send actual email with reset link
+    // For now, we'll log the reset URL (development only)
+    const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/auth/reset-password?token=${resetToken}`;
+    
+    console.log('Password Reset URL (development only):', resetUrl);
+    
+    res.status(200).json({
+      success: true,
+      message: 'If an account with that email exists, you will receive a password reset link.',
+      // TODO: Remove resetToken from response in production
+      ...(process.env['NODE_ENV'] === 'development' && { resetToken, resetUrl }),
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
+// Reset password with token
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array(),
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      res.status(400).json({
+        success: false,
+        message: 'Token and new password are required',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Verify reset token
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, process.env['JWT_SECRET'] as string);
+    } catch (jwtError) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Verify token purpose
+    if (decoded.purpose !== 'password-reset') {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid reset token',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: 'User not found',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password has been reset successfully. You can now log in with your new password.',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+};

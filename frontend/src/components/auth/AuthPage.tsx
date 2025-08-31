@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, GraduationCap } from 'lucide-react';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
+import { ForgotPasswordForm } from './ForgotPasswordForm';
 
 type AuthMode = 'login' | 'register' | 'forgot-password';
 
@@ -71,21 +72,11 @@ export const AuthPage: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.3 }}
-                className="text-center"
               >
-                {/* Placeholder for forgot password form */}
-                <div className="bg-card p-6 rounded-lg border shadow-lg">
-                  <h2 className="text-xl font-semibold mb-4">Reset Password</h2>
-                  <p className="text-muted-foreground mb-4">
-                    Password reset functionality coming soon...
-                  </p>
-                  <button
-                    onClick={handleSwitchToLogin}
-                    className="text-primary hover:underline"
-                  >
-                    Back to Sign In
-                  </button>
-                </div>
+                <ForgotPasswordForm
+                  onBackToLogin={handleSwitchToLogin}
+                  onSwitchToRegister={handleSwitchToRegister}
+                />
               </motion.div>
             )}
           </AnimatePresence>

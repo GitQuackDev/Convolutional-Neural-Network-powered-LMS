@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import passport from 'passport';
-import { register, login, refreshToken, logout, me, googleCallback, updateProfile, changePassword } from '../controllers/authController';
+import { register, login, refreshToken, logout, me, googleCallback, updateProfile, changePassword, forgotPassword, resetPassword } from '../controllers/authController';
 import { authRateLimiter } from '../middleware/rateLimiter';
 import { authenticateToken } from '../middleware/auth';
 
@@ -32,6 +32,15 @@ const changePasswordValidation = [
   body('newPassword').isLength({ min: 8 }).withMessage('New password must be at least 8 characters')
 ];
 
+const forgotPasswordValidation = [
+  body('email').isEmail().normalizeEmail().escape().withMessage('Valid email is required')
+];
+
+const resetPasswordValidation = [
+  body('token').notEmpty().withMessage('Reset token is required'),
+  body('newPassword').isLength({ min: 8 }).withMessage('New password must be at least 8 characters')
+];
+
 // Auth routes with rate limiting
 router.post('/register', authRateLimiter as any, registerValidation, register);
 router.post('/login', authRateLimiter as any, loginValidation, login);
@@ -40,6 +49,10 @@ router.post('/logout', logout);
 router.get('/me', authenticateToken as any, me);
 router.put('/profile', authenticateToken as any, updateProfileValidation, updateProfile);
 router.post('/change-password', authenticateToken as any, changePasswordValidation, changePassword);
+
+// Password reset routes
+router.post('/forgot-password', authRateLimiter as any, forgotPasswordValidation, forgotPassword);
+router.post('/reset-password', authRateLimiter as any, resetPasswordValidation, resetPassword);
 
 // Google OAuth routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

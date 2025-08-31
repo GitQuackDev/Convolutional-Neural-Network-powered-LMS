@@ -4,6 +4,7 @@ import type {
   AuthResponse, 
   PasswordResetRequest, 
   PasswordResetData,
+  PasswordResetResponse,
   User 
 } from '@/types/auth';
 
@@ -71,8 +72,8 @@ class AuthAPIService {
     return this.makeRequest<{ success: boolean; data: { user: User } }>('/me');
   }
 
-  async forgotPassword(data: PasswordResetRequest): Promise<{ success: boolean; message: string }> {
-    return this.makeRequest<{ success: boolean; message: string }>('/forgot-password', {
+  async forgotPassword(data: PasswordResetRequest): Promise<PasswordResetResponse> {
+    return this.makeRequest<PasswordResetResponse>('/forgot-password', {
       method: 'POST',
       body: JSON.stringify(data),
     });
