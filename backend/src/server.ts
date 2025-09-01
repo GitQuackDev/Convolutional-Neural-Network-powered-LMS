@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
 import passport from 'passport';
+import { createServer } from 'http';
 
 // Load environment variables
 dotenv.config();
@@ -15,6 +16,10 @@ import './config/passport';
 // Import database configuration
 import { connectDatabase } from './config/database';
 
+// Import WebSocket server
+import { WebSocketServer } from './websocket/WebSocketServer';
+import { webSocketService } from './services/WebSocketService';
+
 // Import routes
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
@@ -22,17 +27,28 @@ import courseRoutes from './routes/courses';
 import assignmentRoutes from './routes/assignments';
 import cnnRoutes from './routes/cnn';
 import discussionRoutes from './routes/discussions';
+import aiModelsRoutes from './routes/ai-models';
+import aiAnalysisRoutes from './routes/ai-analysis';
+import realtimeRoutes from './routes/realtime';
+import analyticsRoutes from './routes/analytics';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
 import { rateLimiter } from './middleware/rateLimiter';
 import { notFound } from './middleware/notFound';
+import { analyticsMiddleware } from './middleware/analytics';
 
 // Import database connection
 // import { connectDatabase } from './config/database';
 
 const app = express();
 const PORT = process.env['PORT'] || 5000;
+
+// Create HTTP server for WebSocket integration
+const httpServer = createServer(app);
+
+// Initialize WebSocket server
+const wsServer = new WebSocketServer();
 
 // Security middleware
 app.use(helmet({
@@ -77,6 +93,9 @@ app.use(passport.initialize());
 // Rate limiting
 app.use(rateLimiter);
 
+// Analytics tracking (after auth but before routes)
+app.use(analyticsMiddleware.track);
+
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -98,6 +117,10 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/cnn', cnnRoutes);
 app.use('/api/discussions', discussionRoutes);
+app.use('/api/ai-models', aiModelsRoutes);
+app.use('/api/ai-analysis', aiAnalysisRoutes);
+app.use('/api/realtime', realtimeRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // 404 handler
 app.use(notFound);
@@ -111,11 +134,23 @@ const startServer = async () => {
     // Connect to database
     await connectDatabase();
     
-    app.listen(PORT, () => {
+    // Initialize WebSocket server
+    wsServer.initialize(httpServer);
+    
+    // Initialize WebSocket service with server instance
+    const ioInstance = wsServer.getIO();
+    if (ioInstance) {
+      webSocketService.setIO(ioInstance);
+      console.log('🔗 WebSocket service initialized successfully');
+    }
+    
+    // Start HTTP server with WebSocket support
+    httpServer.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env['NODE_ENV']}`);
       console.log(`🌐 Frontend URL: ${process.env['FRONTEND_URL']}`);
       console.log(`📱 Health check: http://localhost:${PORT}/health`);
+      console.log(`🔗 WebSocket server initialized and ready`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
@@ -124,13 +159,15 @@ const startServer = async () => {
 };
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('🛑 SIGTERM received, shutting down gracefully');
+  await wsServer.handleGracefulShutdown();
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('🛑 SIGINT received, shutting down gracefully');
+  await wsServer.handleGracefulShutdown();
   process.exit(0);
 });
 

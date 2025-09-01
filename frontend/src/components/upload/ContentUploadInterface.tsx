@@ -26,7 +26,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCNNAnalysis } from '@/hooks/useCNNAnalysis';
-import type { ContentUploadProps, CNNAnalysisResult, ConfidenceLevel } from '@/types/upload';
+import { useAIAnalysis } from '@/hooks/useAIAnalysis';
+import { AIModelSelector } from './AIModelSelector';
+import { MultiAnalysisResults } from './MultiAnalysisResults';
+import { EnhancedProgressDisplay } from './EnhancedProgressDisplay';
+import type { ContentUploadProps, CNNAnalysisResult, ConfidenceLevel, AnalysisModelType, AIModelType } from '@/types/upload';
 import { cn } from '@/lib/utils';
 
 const getConfidenceLevel = (confidence: number): ConfidenceLevel => {
@@ -245,6 +249,8 @@ const AnalysisResults: React.FC<{ result: CNNAnalysisResult }> = ({ result }) =>
 export const ContentUploadInterface: React.FC<ContentUploadProps> = ({
   onUploadComplete,
   maxFileSize = 50 * 1024 * 1024, // 50MB
+  aiModelsEnabled = true,
+  defaultModels = ['cnn', 'gemini']
 }) => {
   const {
     files,
@@ -255,8 +261,15 @@ export const ContentUploadInterface: React.FC<ContentUploadProps> = ({
   } = useFileUpload();
   
   const { startAnalysis, getAnalysisResult } = useCNNAnalysis();
+  const { 
+    startMultiAnalysis, 
+    getMultiAnalysisResult, 
+    getAnalysisProgress,
+    isWebSocketConnected
+  } = useAIAnalysis();
   
   const [selectedFileForAnalysis, setSelectedFileForAnalysis] = useState<string | null>(null);
+  const [selectedModels, setSelectedModels] = useState<Set<AnalysisModelType>>(new Set(defaultModels));
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const uploadedFiles = await addFiles(acceptedFiles);
@@ -264,15 +277,34 @@ export const ContentUploadInterface: React.FC<ContentUploadProps> = ({
     // Start upload simulation for each file
     uploadedFiles.forEach(async (file) => {
       await simulateUpload(file);
-      // Start CNN analysis after upload completes
-      const analysisResult = await startAnalysis(file);
-      if (analysisResult) {
-        onUploadComplete(analysisResult);
-        // Set the most recent upload as selected
-        setSelectedFileForAnalysis(file.id);
+      
+      // Start analysis based on selected models
+      if (selectedModels.size === 1 && selectedModels.has('cnn')) {
+        // CNN only analysis (legacy mode)
+        const analysisResult = await startAnalysis(file);
+        if (analysisResult) {
+          onUploadComplete(analysisResult);
+          setSelectedFileForAnalysis(file.id);
+        }
+      } else {
+        // Multi-AI analysis
+        let cnnResult = undefined;
+        if (selectedModels.has('cnn')) {
+          cnnResult = await startAnalysis(file);
+          if (cnnResult) {
+            onUploadComplete(cnnResult);
+          }
+        }
+        
+        // Start multi-AI analysis
+        const aiModels = Array.from(selectedModels).filter(model => model !== 'cnn') as AIModelType[];
+        const multiResult = await startMultiAnalysis(file, aiModels, cnnResult);
+        if (multiResult) {
+          setSelectedFileForAnalysis(file.id);
+        }
       }
     });
-  }, [addFiles, simulateUpload, startAnalysis, onUploadComplete]);
+  }, [addFiles, simulateUpload, startAnalysis, startMultiAnalysis, onUploadComplete, selectedModels]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -288,7 +320,15 @@ export const ContentUploadInterface: React.FC<ContentUploadProps> = ({
   });
 
   const analysisResult = selectedFileForAnalysis ? getAnalysisResult(selectedFileForAnalysis) : null;
+  const multiAnalysisResult = selectedFileForAnalysis ? getMultiAnalysisResult(selectedFileForAnalysis) : null;
   const completedFiles = files.filter(file => file.status === 'completed');
+  
+  // Get progress for the currently selected file
+  const currentProgress = selectedFileForAnalysis ? getAnalysisProgress(selectedFileForAnalysis) : null;
+
+  // Determine which result to show - prefer multi-analysis if available
+  const hasMultiAnalysis = multiAnalysisResult && (multiAnalysisResult.aiResults || multiAnalysisResult.consolidatedInsights);
+  const hasActiveAnalysis = currentProgress && Object.keys(currentProgress.modelProgress).length > 0;
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 space-y-6">
@@ -335,6 +375,15 @@ export const ContentUploadInterface: React.FC<ContentUploadProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Model Selection */}
+      {aiModelsEnabled && (
+        <AIModelSelector
+          selectedModels={selectedModels}
+          onModelsChange={setSelectedModels}
+          disabled={files.some(file => file.status === 'uploading' || file.status === 'processing')}
+        />
+      )}
 
       {/* Upload History and Analysis Results */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -423,7 +472,19 @@ export const ContentUploadInterface: React.FC<ContentUploadProps> = ({
 
         {/* Analysis Results */}
         <div className="lg:col-span-2">
-          {analysisResult ? (
+          {/* Enhanced Progress Display for Active Analysis */}
+          {hasActiveAnalysis && currentProgress && (
+            <div className="mb-6">
+              <EnhancedProgressDisplay 
+                progress={currentProgress} 
+                isConnected={isWebSocketConnected} 
+              />
+            </div>
+          )}
+          
+          {hasMultiAnalysis ? (
+            <MultiAnalysisResults result={multiAnalysisResult!} />
+          ) : analysisResult ? (
             <AnalysisResults result={analysisResult} />
           ) : completedFiles.length > 0 ? (
             <Card className="h-full">
@@ -448,10 +509,10 @@ export const ContentUploadInterface: React.FC<ContentUploadProps> = ({
                   <Brain className="w-12 h-12 text-gray-400 mx-auto" />
                   <div>
                     <p className="text-lg font-medium text-gray-600">
-                      AI Analysis Results
+                      Enhanced AI Analysis Results
                     </p>
                     <p className="text-sm text-gray-500">
-                      Upload a file to see AI-powered insights
+                      Upload a file and select AI models to see comprehensive insights
                     </p>
                   </div>
                 </div>

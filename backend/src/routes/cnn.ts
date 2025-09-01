@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import { authenticateToken } from '../middleware/auth';
+import { analyticsMiddleware } from '../middleware/analytics';
 
 const router = Router();
 
 // All CNN routes require authentication
 router.use(authenticateToken as any);
+
+// CNN-specific analytics tracking
+router.use(analyticsMiddleware.trackCNNAnalysis);
 
 // Analyze uploaded content
 router.post('/analyze', (req, res) => {

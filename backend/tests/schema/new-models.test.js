@@ -101,13 +101,32 @@ describe('UserAnalytics Model', () => {
   });
 
   test('should retrieve analytics with user relation', async () => {
-    const analytics = await prisma.userAnalytics.findFirst({
-      where: { userId: testUser.id },
+    // First create analytics data to retrieve
+    const analyticsData = {
+      userId: testUser.id,
+      sessionId: 'test-session-relation',
+      pageViews: { '/dashboard': 1 },
+      contentInteractions: { clicks: 5 },
+      cnnAnalysisUsage: { uploadsCount: 1 },
+      learningProgress: { completedModules: 1 }
+    };
+
+    const createdAnalytics = await prisma.userAnalytics.create({
+      data: analyticsData
+    });
+
+    // Now retrieve with user relation
+    const analytics = await prisma.userAnalytics.findUnique({
+      where: { id: createdAnalytics.id },
       include: { user: true }
     });
 
     expect(analytics).toBeDefined();
-    expect(analytics.user.email).toBe('test-schema@example.com');
+    expect(analytics).not.toBeNull();
+    if (analytics) {
+      expect(analytics.user).toBeDefined();
+      expect(analytics.user.email).toBe('test-schema@example.com');
+    }
   });
 });
 
@@ -139,10 +158,21 @@ describe('SessionMetrics Model', () => {
   });
 
   test('should update session end time', async () => {
-    const session = await prisma.sessionMetrics.findFirst({
-      where: { userId: testUser.id }
+    // First create a session to update
+    const sessionData = {
+      userId: testUser.id,
+      sessionStart: new Date(),
+      activeTime: 1800,
+      courseInteractions: { courseViews: 3 },
+      assignmentProgress: { started: 2 },
+      engagementScore: 0.75
+    };
+
+    const session = await prisma.sessionMetrics.create({
+      data: sessionData
     });
 
+    // Now update the session end time
     const endTime = new Date();
     const updatedSession = await prisma.sessionMetrics.update({
       where: { id: session.id },

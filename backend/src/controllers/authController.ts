@@ -71,7 +71,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       message: 'User registered successfully',
       data: {
         user: userResponse,
-        accessToken,
+        token: accessToken,
         refreshToken
       },
       timestamp: new Date().toISOString()
@@ -143,7 +143,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       message: 'Login successful',
       data: {
         user: userResponse,
-        accessToken,
+        token: accessToken,
         refreshToken
       },
       timestamp: new Date().toISOString()

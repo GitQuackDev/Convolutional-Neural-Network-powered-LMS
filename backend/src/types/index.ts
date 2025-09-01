@@ -290,3 +290,70 @@ export interface IEmailService {
   sendWelcomeEmail: (email: string, name: string) => Promise<void>;
   sendAssignmentNotification: (email: string, assignment: IAssignment) => Promise<void>;
 }
+
+// AI Model Types
+export type AIModelType = 'gpt4' | 'claude' | 'gemini';
+export type AnalysisModelType = 'cnn' | AIModelType;
+
+export interface MultiAnalysisRequest {
+  fileId: string;
+  selectedModels: AIModelType[];
+  fileBuffer: Buffer;
+  fileName: string;
+  fileType: string;
+}
+
+export interface AnalysisProgress {
+  analysisId: string;
+  fileId: string;
+  userId: string;
+  overallProgress: number;
+  modelProgress: Record<AIModelType, {
+    progress: number;
+    status: 'pending' | 'processing' | 'completed' | 'error' | 'cancelled';
+    errorMessage?: string;
+    lastUpdated?: Date;
+    estimatedCompletion?: Date;
+  }>;
+  status: 'started' | 'processing' | 'completed' | 'completed_with_errors' | 'cancelled';
+  startTime: Date;
+  endTime?: Date;
+  consolidatedInsights?: ConsolidatedInsights;
+}
+
+export interface ConsolidatedInsights {
+  summary: string;
+  commonFindings: string[];
+  conflictingAnalyses: ConflictAnalysis[];
+  confidenceScore: number;
+  recommendedActions: string[];
+}
+
+export interface ConflictAnalysis {
+  finding: string;
+  models: AIModelType[];
+  confidence: Record<AIModelType, number>;
+  resolution: string;
+}
+
+export interface AIAnalysisResult {
+  model: AIModelType;
+  status: 'processing' | 'completed' | 'error';
+  confidence: number;
+  analysisType: 'content_analysis' | 'object_detection' | 'text_extraction';
+  results: {
+    description: string;
+    insights: string[];
+    entities: EntityExtraction[];
+    recommendations: string[];
+  };
+  processingTime: number;
+  timestamp: Date;
+}
+
+export interface EntityExtraction {
+  entity: string;
+  type: 'person' | 'organization' | 'location' | 'technology' | 'concept';
+  confidence: number;
+  context: string;
+}
