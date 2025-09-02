@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken';
 import { SocketData } from './types';
 
 interface JWTPayload {
-  id: string;
+  userId: string;
   email: string;
   role: 'STUDENT' | 'PROFESSOR' | 'ADMIN';
   iat: number;
@@ -44,7 +44,7 @@ export const authenticateSocket = async (
     
     // Set authenticated user data on socket
     const socketData: SocketData = {
-      userId: decoded.id,
+      userId: decoded.userId,
       userRole: decoded.role,
       courseIds: [], // Will be populated based on user's enrolled courses
     };
@@ -52,10 +52,10 @@ export const authenticateSocket = async (
     socket.data = socketData;
     
     // Join user to their personal room for private notifications
-    socket.join(`user:${decoded.id}`);
+    socket.join(`user:${decoded.userId}`);
     
     // Log successful authentication
-    console.log(`🔐 WebSocket authenticated: User ${decoded.id} (${decoded.role})`);
+    console.log(`🔐 WebSocket authenticated: User ${decoded.userId} (${decoded.role})`);
     
     next();
   } catch (error) {

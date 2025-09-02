@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
+import { authStorage } from '@/utils/authStorage';
 
 interface ProgressEvent {
   type: 'analysis_progress' | 'analysis_complete' | 'session_update';
@@ -27,21 +28,45 @@ export const useWebSocket = (namespace = '/analytics') => {
   const socketRef = useRef<SocketType | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
+  // Monitor auth token changes
+  useEffect(() => {
+    const token = authStorage.getToken();
+    setAuthToken(token);
+    
+    // Set up an interval to check for token changes (in case user logs in/out)
+    const interval = setInterval(() => {
+      const currentToken = authStorage.getToken();
+      if (currentToken !== authToken) {
+        setAuthToken(currentToken);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [authToken]);
 
   useEffect(() => {
     // Don't connect if no auth token
-    const token = localStorage.getItem('authToken');
-    if (!token) {
+    console.log('🔍 WebSocket useEffect triggered:', { hasToken: !!authToken, namespace });
+    
+    if (!authToken) {
+      console.log('❌ No auth token found, skipping WebSocket connection');
+      setIsConnected(false);
+      setConnectionError(null);
       return;
     }
 
     try {
       // Create WebSocket connection
       const serverUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+      const fullUrl = serverUrl + namespace;
       
-      socketRef.current = io(serverUrl + namespace, {
+      console.log('🚀 Attempting WebSocket connection:', { serverUrl, namespace, fullUrl });
+      
+      socketRef.current = io(fullUrl, {
         auth: {
-          token: token
+          token: authToken
         },
         transports: ['websocket', 'polling'],
         timeout: 20000,
@@ -52,7 +77,7 @@ export const useWebSocket = (namespace = '/analytics') => {
 
       // Connection event handlers
       socket.on('connect', () => {
-        console.log(`🔗 Connected to WebSocket ${namespace}`);
+        console.log(`🔗 Connected to WebSocket ${namespace} at ${fullUrl}`);
         setIsConnected(true);
         setConnectionError(null);
       });
@@ -63,7 +88,7 @@ export const useWebSocket = (namespace = '/analytics') => {
       });
 
       socket.on('connect_error', (error: Error) => {
-        console.error(`❌ WebSocket connection error:`, error);
+        console.error(`❌ WebSocket connection error for ${namespace}:`, error);
         setConnectionError(error.message || 'Connection failed');
         setIsConnected(false);
       });
@@ -78,7 +103,7 @@ export const useWebSocket = (namespace = '/analytics') => {
       console.error('Failed to initialize WebSocket:', error);
       setConnectionError(error instanceof Error ? error.message : 'Unknown error');
     }
-  }, [namespace]);
+  }, [namespace, authToken]);
 
   const subscribe = <T extends keyof WebSocketEvents>(
     event: T,

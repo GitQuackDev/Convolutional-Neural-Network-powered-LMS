@@ -69,8 +69,12 @@ app.use(helmet({
 }));
 
 // CORS configuration
+const allowedOrigins = process.env['NODE_ENV'] === 'development' 
+  ? ['http://localhost:5173', 'http://localhost:5174'] 
+  : [process.env['FRONTEND_URL'] || 'http://localhost:5173'];
+
 app.use(cors({
-  origin: process.env['FRONTEND_URL'] || 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -131,8 +135,17 @@ app.use(errorHandler);
 // Database connection and server startup
 const startServer = async () => {
   try {
-    // Connect to database
-    await connectDatabase();
+    console.log('🔄 Starting server initialization...');
+    
+    // Try to connect to database, but don't fail if it doesn't work
+    try {
+      console.log('🔗 Connecting to database...');
+      await connectDatabase();
+      console.log('✅ Database connection successful');
+    } catch (dbError) {
+      console.warn('⚠️ Database connection failed, continuing in development mode:', dbError instanceof Error ? dbError.message : 'Unknown error');
+      console.log('🔧 Server will use fallback authentication for development');
+    }
     
     // Initialize WebSocket server
     wsServer.initialize(httpServer);
@@ -154,6 +167,7 @@ const startServer = async () => {
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
+    console.error('❌ Error details:', error instanceof Error ? error.message : 'Unknown error');
     process.exit(1);
   }
 };

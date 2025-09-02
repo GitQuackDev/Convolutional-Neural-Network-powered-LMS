@@ -10,7 +10,11 @@ import type {
 import fs from 'fs';
 
 interface AuthenticatedRequest extends Request {
-  user?: { id: string };
+  user?: { 
+    userId: string;
+    email: string;
+    role: string;
+  };
 }
 
 export class AIAnalysisController {
@@ -28,7 +32,7 @@ export class AIAnalysisController {
     try {
       const file = req.file;
       const { selectedModels } = req.body;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
       
       if (!file) {
         res.status(400).json({ error: 'No file uploaded' });
@@ -36,6 +40,7 @@ export class AIAnalysisController {
       }
 
       if (!userId) {
+        console.log('❌ No userId found in req.user:', req.user);
         res.status(401).json({ error: 'Authentication required' });
         return;
       }

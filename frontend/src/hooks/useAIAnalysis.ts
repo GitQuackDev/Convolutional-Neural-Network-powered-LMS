@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useWebSocket } from './useWebSocket';
 import { apiService } from '@/services/apiService';
+import { authStorage } from '@/utils/authStorage';
 import type { 
   AIAnalysisResult, 
   MultiAnalysisResult, 
@@ -20,9 +21,14 @@ const useAIAnalysis = () => {
   // WebSocket connection for real-time updates
   const { isConnected, subscribe } = useWebSocket('/analytics');
 
+  console.log('🔗 AI Analysis WebSocket status:', { isConnected });
+
   // Subscribe to WebSocket events for real-time progress
   useEffect(() => {
+    console.log('📡 WebSocket connection status changed:', { isConnected });
     if (!isConnected) return;
+
+    console.log('🎯 Setting up WebSocket event subscriptions for AI analysis');
 
     // Subscribe to progress events only - using available WebSocket events
     const unsubscribeProgress = subscribe('progress', (data: unknown) => {
@@ -85,15 +91,26 @@ const useAIAnalysis = () => {
   }, [isConnected, subscribe]);
 
   const generateConsolidatedInsights = useCallback((aiResults: Record<AIModelType, AIAnalysisResult>): ConsolidatedInsights => {
-    const allInsights = Object.values(aiResults).flatMap(result => result.results.insights);
-    const allRecommendations = Object.values(aiResults).flatMap(result => result.results.recommendations);
+    // Safety check for null/undefined aiResults
+    if (!aiResults || typeof aiResults !== 'object') {
+      return {
+        summary: 'No AI analysis results available',
+        commonFindings: [],
+        conflictingAnalyses: [],
+        confidenceScore: 0,
+        recommendedActions: ['Upload a file to get AI-powered insights']
+      };
+    }
+
+    const allInsights = Object.values(aiResults).flatMap(result => result?.results?.insights || []);
+    const allRecommendations = Object.values(aiResults).flatMap(result => result?.results?.recommendations || []);
     
     // Get unique insights and recommendations
     const uniqueInsights = [...new Set(allInsights)];
     const uniqueRecommendations = [...new Set(allRecommendations)];
     
     // Create combined description
-    const descriptions = Object.values(aiResults).map(result => result.results.description);
+    const descriptions = Object.values(aiResults).map(result => result?.results?.description || 'No description available');
     const combinedDescription = descriptions.length > 0 ? descriptions[0] : 'No description available';
     
     return {
@@ -136,6 +153,34 @@ const useAIAnalysis = () => {
 
     setAnalysisProgress(prev => new Map(prev).set(uploadId, initialProgress));
 
+    // Check authentication before making API call
+    const token = authStorage.getToken();
+    if (!token) {
+      console.warn('⚠️ No authentication token found');
+      const result: MultiAnalysisResult = {
+        uploadId,
+        cnnResults: cnnResult,
+        aiResults: {} as Record<AIModelType, AIAnalysisResult>,
+        consolidatedInsights: {
+          summary: 'Authentication required to access AI analysis features. Please log in to continue.',
+          commonFindings: [],
+          conflictingAnalyses: [],
+          confidenceScore: 0,
+          recommendedActions: [
+            'Log in to your account to access AI analysis',
+            'If you don\'t have an account, please register first',
+            'Your session may have expired - try refreshing and logging in again'
+          ]
+        },
+        overallStatus: 'error',
+        timestamp: new Date().toISOString()
+      };
+
+      setMultiAnalysisResults(prev => new Map(prev).set(uploadId, result));
+      setIsAnalyzing(prev => { const newSet = new Set(prev); newSet.delete(uploadId); return newSet; });
+      return result;
+    }
+
     // Make real API call to backend
     console.log('🚀 Starting AI analysis API call with models:', aiModels);
     console.log('📁 File:', file.file.name, 'Type:', file.file.type);
@@ -154,7 +199,7 @@ const useAIAnalysis = () => {
         uploadId,
         cnnResults: cnnResult,
         aiResults: apiResult.aiResults || {},
-        consolidatedInsights: generateConsolidatedInsights(apiResult.aiResults as Record<AIModelType, AIAnalysisResult>),
+        consolidatedInsights: generateConsolidatedInsights(apiResult.aiResults || {}),
         overallStatus: 'completed',
         timestamp: new Date().toISOString()
       };
@@ -166,17 +211,30 @@ const useAIAnalysis = () => {
     } catch (error) {
       console.error('❌ AI analysis API call failed:', error);
       
+      let errorMessage = 'AI analysis temporarily unavailable. Please try again later.';
+      let recommendedActions = ['API service temporarily unavailable'];
+      
+      // Handle authentication errors specifically
+      if (error instanceof Error && error.message.includes('401 Unauthorized')) {
+        errorMessage = 'Authentication required to access AI analysis features. Please log in to continue.';
+        recommendedActions = [
+          'Log in to your account to access AI analysis',
+          'If you don\'t have an account, please register first',
+          'Check that your session hasn\'t expired'
+        ];
+      }
+      
       // Quick fallback - no simulation
       const result: MultiAnalysisResult = {
         uploadId,
         cnnResults: cnnResult,
         aiResults: {} as Record<AIModelType, AIAnalysisResult>,
         consolidatedInsights: {
-          summary: 'AI analysis temporarily unavailable. Please try again later.',
+          summary: errorMessage,
           commonFindings: [],
           conflictingAnalyses: [],
           confidenceScore: 0,
-          recommendedActions: ['API service temporarily unavailable']
+          recommendedActions
         },
         overallStatus: 'error',
         timestamp: new Date().toISOString()

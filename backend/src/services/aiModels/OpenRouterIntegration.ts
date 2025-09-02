@@ -38,8 +38,19 @@ export class OpenRouterIntegration implements AIModel {
         console.log(`📸 Processing image file: ${file.originalname}`);
         
         // Convert image to base64
-        const fs = require('fs');
-        const imageBuffer = fs.readFileSync(file.path);
+        let imageBuffer: Buffer;
+        
+        if (file.buffer) {
+          // File is already in memory as buffer
+          imageBuffer = file.buffer;
+        } else if (file.path) {
+          // File is stored on disk, read it
+          const fs = require('fs');
+          imageBuffer = fs.readFileSync(file.path);
+        } else {
+          throw new Error('File buffer or path not available');
+        }
+        
         const base64Image = imageBuffer.toString('base64');
         const imageUrl = `data:${file.mimetype};base64,${base64Image}`;
         

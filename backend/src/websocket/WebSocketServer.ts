@@ -32,10 +32,15 @@ export class WebSocketServer {
    */
   initialize(httpServer: HttpServer): void {
     try {
+      // Configure CORS origins for WebSocket - match main server CORS
+      const allowedOrigins = process.env['NODE_ENV'] === 'development' 
+        ? ['http://localhost:5173', 'http://localhost:5174'] 
+        : [process.env['FRONTEND_URL'] || 'http://localhost:5173'];
+
       // Configure Socket.io server
       this.io = new SocketIOServer(httpServer, {
         cors: {
-          origin: process.env['WEBSOCKET_CORS_ORIGIN'] || process.env['FRONTEND_URL'] || 'http://localhost:5173',
+          origin: allowedOrigins,
           methods: ['GET', 'POST'],
           credentials: true
         },

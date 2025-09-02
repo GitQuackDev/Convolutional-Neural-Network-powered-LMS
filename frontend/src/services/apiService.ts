@@ -10,6 +10,14 @@ class APIService {
     const url = `${API_BASE_URL}${endpoint}`;
     const token = authStorage.getToken();
     
+    // Debug logging for authentication
+    console.log('🔍 API Request Debug:', {
+      endpoint,
+      hasToken: !!token,
+      tokenLength: token?.length || 0,
+      tokenPrefix: token ? token.substring(0, 10) + '...' : 'No token'
+    });
+    
     const config: RequestInit = {
       headers: {
         ...(token && { 'Authorization': `Bearer ${token}` }),

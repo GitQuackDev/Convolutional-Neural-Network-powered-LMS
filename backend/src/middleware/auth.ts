@@ -14,10 +14,14 @@ interface AuthRequest extends Request {
 // Middleware to authenticate JWT token
 export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    console.log('🔐 Auth middleware called');
     const authHeader = req.headers['authorization'];
+    console.log('🔍 Auth header:', authHeader ? 'Present' : 'Missing');
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    console.log('🎫 Token extracted:', token ? `${token.substring(0, 10)}...` : 'No token');
 
     if (!token) {
+      console.log('❌ No token provided');
       res.status(401).json({
         success: false,
         message: 'Access token is required',
@@ -28,33 +32,65 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
 
     const jwtSecret = process.env['JWT_SECRET'];
     if (!jwtSecret) {
+      console.log('❌ JWT_SECRET not configured');
       throw new Error('JWT_SECRET not configured');
     }
 
+    console.log('🔓 Attempting to verify token...');
     // Verify token
     const decoded = jwt.verify(token, jwtSecret) as any;
+    console.log('✅ Token verified, decoded:', { userId: decoded.userId, email: decoded.email });
     
-    // Check if user still exists
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      res.status(401).json({
-        success: false,
-        message: 'User not found',
-        timestamp: new Date().toISOString()
-      });
+    try {
+      // Try database user lookup first
+      console.log('👤 Looking up user in database...');
+      const user = await User.findById(decoded.userId);
+      console.log('👤 User found:', user ? 'Yes' : 'No');
+      
+      if (user) {
+        console.log('✅ Authentication successful (database)');
+        // Add user info to request
+        req.user = {
+          userId: decoded.userId,
+          email: decoded.email,
+          role: decoded.role
+        };
+        next();
+        return;
+      } else {
+        console.log('⚠️ User not found in database, checking development mode...');
+      }
+    } catch (dbError) {
+      console.error('⚠️ Database lookup error:', dbError);
+      console.log('� Falling back to development mode authentication');
+    }
+    
+    // FALLBACK: Development mode - skip database lookup
+    if (process.env['NODE_ENV'] === 'development') {
+      console.log('🔧 DEVELOPMENT MODE: Using token authentication without database lookup');
+      // Add user info to request directly from token
+      req.user = {
+        userId: decoded.userId,
+        email: decoded.email,
+        role: decoded.role
+      };
+      console.log('✅ Authentication successful (development mode fallback)');
+      next();
       return;
     }
-
-    // Add user info to request
-    req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
-      role: decoded.role
-    };
-
-    next();
+    
+    // No authentication method worked
+    console.log('❌ Authentication failed - user not found and not in development mode');
+    res.status(401).json({
+      success: false,
+      message: 'User not found',
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
-    console.error('Authentication error:', error);
+    console.error('❌ Authentication error:', error);
+    if (error instanceof jwt.JsonWebTokenError) {
+      console.log('🚫 JWT Error type:', error.name, error.message);
+    }
     res.status(403).json({
       success: false,
       message: 'Invalid or expired token',

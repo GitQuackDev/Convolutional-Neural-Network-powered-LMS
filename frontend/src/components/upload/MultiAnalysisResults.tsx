@@ -99,23 +99,34 @@ const calculateOverallConfidence = (result: MultiAnalysisResult): number => {
 
 // Enhanced model comparison analysis
 const generateModelComparison = (result: MultiAnalysisResult) => {
-  if (!result.aiResults) return null;
+  if (!result.aiResults || typeof result.aiResults !== 'object') return null;
 
   const models = Object.keys(result.aiResults) as AIModelType[];
+  if (models.length === 0) return null;
+
+  // Ensure all models have valid data before proceeding
+  const validModels = models.filter(model => 
+    result.aiResults![model] && 
+    typeof result.aiResults![model].confidence === 'number' &&
+    typeof result.aiResults![model].processingTime === 'number'
+  );
+  
+  if (validModels.length === 0) return null;
+
   const comparison = {
-    performance: models.map(model => ({
+    performance: validModels.map(model => ({
       model,
       confidence: result.aiResults![model].confidence,
       processingTime: result.aiResults![model].processingTime,
-      insightCount: result.aiResults![model].results.insights.length,
-      entityCount: result.aiResults![model].results.entities.length
+      insightCount: result.aiResults![model].results?.insights?.length || 0,
+      entityCount: result.aiResults![model].results?.entities?.length || 0
     })),
-    bestPerformer: models.reduce((best, current) => 
+    bestPerformer: validModels.length > 0 ? validModels.reduce((best, current) => 
       result.aiResults![current].confidence > result.aiResults![best].confidence ? current : best
-    ),
-    fastestModel: models.reduce((fastest, current) => 
+    ) : null,
+    fastestModel: validModels.length > 0 ? validModels.reduce((fastest, current) => 
       result.aiResults![current].processingTime < result.aiResults![fastest].processingTime ? current : fastest
-    )
+    ) : null
   };
 
   return comparison;
@@ -280,84 +291,102 @@ const AIResultCard: React.FC<{ model: AIModelType; result: AIAnalysisResult }> =
 };
 
 const ConsolidatedInsightsCard: React.FC<{ insights: ConsolidatedInsights }> = ({ insights }) => {
+  // Check if this is an authentication error
+  const isAuthError = insights.summary.includes('Authentication required');
+  
   return (
     <Card className="mb-4">
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <TrendingUp className="w-5 h-5 text-purple-500" />
-          <span>Consolidated AI Insights</span>
-          <ConfidenceBadge confidence={insights.confidenceScore} />
+          {isAuthError ? (
+            <AlertTriangle className="w-5 h-5 text-orange-500" />
+          ) : (
+            <TrendingUp className="w-5 h-5 text-purple-500" />
+          )}
+          <span>{isAuthError ? 'Authentication Required' : 'Consolidated AI Insights'}</span>
+          {!isAuthError && <ConfidenceBadge confidence={insights.confidenceScore} />}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Summary */}
         <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-2">Summary</h4>
-          <p className="text-sm text-gray-600 leading-relaxed">{insights.summary}</p>
-        </div>
-
-        <Separator />
-
-        {/* Common Findings */}
-        <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center">
-            <CheckCircle2 className="w-4 h-4 mr-1 text-green-500" />
-            Common Findings
+          <h4 className="font-medium text-sm text-gray-700 mb-2">
+            {isAuthError ? 'Access Denied' : 'Summary'}
           </h4>
-          <div className="space-y-2">
-            {insights.commonFindings.map((finding, index) => (
-              <div key={index} className="flex items-start space-x-2">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0" />
-                <p className="text-sm text-gray-600">{finding}</p>
-              </div>
-            ))}
-          </div>
+          <p className={`text-sm leading-relaxed ${isAuthError ? 'text-orange-600' : 'text-gray-600'}`}>
+            {insights.summary}
+          </p>
         </div>
-
-        {/* Conflicting Analyses */}
-        {insights.conflictingAnalyses.length > 0 && (
-          <div>
-            <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center">
-              <AlertTriangle className="w-4 h-4 mr-1 text-orange-500" />
-              Conflicting Analyses
-            </h4>
-            <div className="space-y-3">
-              {insights.conflictingAnalyses.map((conflict, index) => (
-                <Card key={index} className="p-3 bg-orange-50 border-orange-200">
-                  <div className="mb-2">
-                    <span className="font-medium text-sm">{conflict.finding}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {conflict.models.map(model => (
-                      <Badge key={model} variant="outline" className="text-xs">
-                        {model}: {Math.round(conflict.confidence[model] * 100)}%
-                      </Badge>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-600">{conflict.resolution}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
 
         <Separator />
 
-        {/* Recommended Actions */}
+        {/* Recommended Actions - always show for auth errors */}
         <div>
           <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center">
             <Target className="w-4 h-4 mr-1 text-blue-500" />
-            Recommended Actions
+            {isAuthError ? 'Required Actions' : 'Recommended Actions'}
           </h4>
           <div className="space-y-2">
             {insights.recommendedActions.map((action, index) => (
               <div key={index} className="flex items-start space-x-2">
-                <Target className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-gray-600">{action}</p>
+                <Target className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isAuthError ? 'text-orange-500' : 'text-blue-500'}`} />
+                <p className={`text-sm ${isAuthError ? 'text-orange-600 font-medium' : 'text-gray-600'}`}>
+                  {action}
+                </p>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Only show other sections if not an auth error */}
+        {!isAuthError && (
+          <>
+            {/* Common Findings */}
+            <div>
+              <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center">
+                <CheckCircle2 className="w-4 h-4 mr-1 text-green-500" />
+                Common Findings
+              </h4>
+              <div className="space-y-2">
+                {insights.commonFindings.map((finding, index) => (
+                  <div key={index} className="flex items-start space-x-2">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0" />
+                    <p className="text-sm text-gray-600">{finding}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Conflicting Analyses */}
+            {insights.conflictingAnalyses.length > 0 && (
+              <div>
+                <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center">
+                  <AlertTriangle className="w-4 h-4 mr-1 text-orange-500" />
+                  Conflicting Analyses
+                </h4>
+                <div className="space-y-3">
+                  {insights.conflictingAnalyses.map((conflict, index) => (
+                    <Card key={index} className="p-3 bg-orange-50 border-orange-200">
+                      <div className="mb-2">
+                        <span className="font-medium text-sm">{conflict.finding}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {conflict.models.map(model => (
+                          <Badge key={model} variant="outline" className="text-xs">
+                            {model}: {Math.round(conflict.confidence[model] * 100)}%
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-600">{conflict.resolution}</p>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Separator />
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -558,44 +587,45 @@ export const MultiAnalysisResults: React.FC<MultiAnalysisResultsProps> = ({
 
                   {/* Enhanced Model Comparison */}
                   {(hasAIResults || hasCNNResults) && (() => {
-                    const comparison = generateModelComparison(result);
-                    
-                    return (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center space-x-2">
-                            <BarChart3 className="w-5 h-5 text-green-500" />
-                            <span>Model Performance Comparison</span>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-6">
-                            {/* Performance Leaders */}
-                            {comparison && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                <Card className="p-4 border-green-200 bg-green-50">
-                                  <div className="flex items-center space-x-2 mb-2">
-                                    <Target className="w-5 h-5 text-green-600" />
-                                    <span className="font-medium text-green-800">Highest Confidence</span>
-                                  </div>
-                                  <div className="text-sm text-green-700">
-                                    <p className="font-semibold capitalize">{comparison.bestPerformer}</p>
-                                    <p>{Math.round(result.aiResults![comparison.bestPerformer].confidence * 100)}% confidence</p>
-                                  </div>
-                                </Card>
-                                
-                                <Card className="p-4 border-blue-200 bg-blue-50">
-                                  <div className="flex items-center space-x-2 mb-2">
-                                    <Clock className="w-5 h-5 text-blue-600" />
-                                    <span className="font-medium text-blue-800">Fastest Processing</span>
-                                  </div>
-                                  <div className="text-sm text-blue-700">
-                                    <p className="font-semibold capitalize">{comparison.fastestModel}</p>
-                                    <p>{result.aiResults![comparison.fastestModel].processingTime.toFixed(1)}s processing time</p>
-                                  </div>
-                                </Card>
-                              </div>
-                            )}
+                    try {
+                      const comparison = generateModelComparison(result);
+                      
+                      return (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center space-x-2">
+                              <BarChart3 className="w-5 h-5 text-green-500" />
+                              <span>Model Performance Comparison</span>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-6">
+                              {/* Performance Leaders */}
+                              {comparison && comparison.bestPerformer && comparison.fastestModel && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                  <Card className="p-4 border-green-200 bg-green-50">
+                                    <div className="flex items-center space-x-2 mb-2">
+                                      <Target className="w-5 h-5 text-green-600" />
+                                      <span className="font-medium text-green-800">Highest Confidence</span>
+                                    </div>
+                                    <div className="text-sm text-green-700">
+                                      <p className="font-semibold capitalize">{comparison.bestPerformer}</p>
+                                      <p>{Math.round(result.aiResults![comparison.bestPerformer].confidence * 100)}% confidence</p>
+                                    </div>
+                                  </Card>
+                                  
+                                  <Card className="p-4 border-blue-200 bg-blue-50">
+                                    <div className="flex items-center space-x-2 mb-2">
+                                      <Clock className="w-5 h-5 text-blue-600" />
+                                      <span className="font-medium text-blue-800">Fastest Processing</span>
+                                    </div>
+                                    <div className="text-sm text-blue-700">
+                                      <p className="font-semibold capitalize">{comparison.fastestModel}</p>
+                                      <p>{result.aiResults![comparison.fastestModel].processingTime.toFixed(1)}s processing time</p>
+                                    </div>
+                                  </Card>
+                                </div>
+                              )}
 
                             {/* Detailed Model Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -690,6 +720,18 @@ export const MultiAnalysisResults: React.FC<MultiAnalysisResultsProps> = ({
                         </CardContent>
                       </Card>
                     );
+                    } catch (error) {
+                      console.error('Error rendering model comparison:', error);
+                      return (
+                        <Card>
+                          <CardContent>
+                            <div className="text-center py-4 text-gray-500">
+                              Unable to display model comparison. No valid analysis results available.
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
                   })()}
                 </div>
               </TabsContent>

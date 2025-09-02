@@ -8,6 +8,9 @@ export const connectDatabase = async (): Promise<void> => {
       throw new Error('DATABASE_URL environment variable is not defined');
     }
 
+    console.log('🔗 Connecting to MongoDB Atlas...');
+    console.log('🌐 Database URI:', mongoUri.replace(/\/\/.*@/, '//***:***@')); // Hide credentials
+
     // MongoDB connection options
     const options = {
       maxPoolSize: 10, // Maximum number of socket connections
@@ -15,10 +18,14 @@ export const connectDatabase = async (): Promise<void> => {
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
       family: 4, // Use IPv4, skip trying IPv6
       retryWrites: true,
-      w: 'majority' as const
+      w: 'majority' as const,
+      connectTimeoutMS: 10000, // Give up initial connection after 10 seconds
     };
 
+    console.log('⚙️ Connection options:', options);
     await mongoose.connect(mongoUri, options);
+
+    console.log('✅ MongoDB connection established successfully');
 
     // Connection event listeners
     mongoose.connection.on('connected', () => {
@@ -42,6 +49,7 @@ export const connectDatabase = async (): Promise<void> => {
 
   } catch (error) {
     console.error('❌ Database connection failed:', error);
+    console.error('❌ Connection error details:', error instanceof Error ? error.message : 'Unknown error');
     throw error;
   }
 };
