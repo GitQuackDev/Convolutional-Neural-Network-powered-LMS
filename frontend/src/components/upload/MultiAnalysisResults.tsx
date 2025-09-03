@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
+import MarkdownRenderer from '@/components/ui/MarkdownRenderer';
 
 import type { 
   MultiAnalysisResult, 
@@ -105,22 +106,28 @@ const generateModelComparison = (result: MultiAnalysisResult) => {
   if (models.length === 0) return null;
 
   // Ensure all models have valid data before proceeding
-  const validModels = models.filter(model => 
-    result.aiResults![model] && 
-    typeof result.aiResults![model].confidence === 'number' &&
-    typeof result.aiResults![model].processingTime === 'number'
-  );
+  const validModels = models.filter(model => {
+    const modelResult = result.aiResults![model];
+    return modelResult && 
+           typeof modelResult === 'object' &&
+           typeof modelResult.confidence === 'number' &&
+           typeof modelResult.processingTime === 'number' &&
+           modelResult.results;
+  });
   
   if (validModels.length === 0) return null;
 
   const comparison = {
-    performance: validModels.map(model => ({
-      model,
-      confidence: result.aiResults![model].confidence,
-      processingTime: result.aiResults![model].processingTime,
-      insightCount: result.aiResults![model].results?.insights?.length || 0,
-      entityCount: result.aiResults![model].results?.entities?.length || 0
-    })),
+    performance: validModels.map(model => {
+      const modelResult = result.aiResults![model];
+      return {
+        model,
+        confidence: modelResult.confidence,
+        processingTime: modelResult.processingTime,
+        insightCount: modelResult.results?.insights?.length || 0,
+        entityCount: modelResult.results?.entities?.length || 0
+      };
+    }),
     bestPerformer: validModels.length > 0 ? validModels.reduce((best, current) => 
       result.aiResults![current].confidence > result.aiResults![best].confidence ? current : best
     ) : null,
@@ -188,6 +195,27 @@ const EntityCard: React.FC<{ entity: EntityExtraction }> = ({ entity }) => (
 const AIResultCard: React.FC<{ model: AIModelType; result: AIAnalysisResult }> = ({ model, result }) => {
   const [expanded, setExpanded] = useState(false);
 
+  // Ensure we have valid result data
+  if (!result || !result.results) {
+    return (
+      <Card className="mb-4">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <AIModelIcon model={model} />
+              </div>
+              <div>
+                <CardTitle className="text-lg capitalize">{model}</CardTitle>
+                <p className="text-sm text-red-600">No results available</p>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mb-4">
       <CardHeader className="pb-3">
@@ -199,12 +227,12 @@ const AIResultCard: React.FC<{ model: AIModelType; result: AIAnalysisResult }> =
             <div>
               <CardTitle className="text-lg capitalize">{model}</CardTitle>
               <p className="text-sm text-gray-600">
-                {result.analysisType.replace('_', ' ')} • {result.processingTime.toFixed(1)}s
+                {result.analysisType?.replace('_', ' ') || 'analysis'} • {(result.processingTime || 0).toFixed(1)}s
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <ConfidenceBadge confidence={result.confidence} />
+            <ConfidenceBadge confidence={result.confidence || 0} />
             <Button
               variant="ghost"
               size="sm"
@@ -232,7 +260,11 @@ const AIResultCard: React.FC<{ model: AIModelType; result: AIAnalysisResult }> =
                     <Target className="w-4 h-4 mr-1" />
                     Analysis Summary
                   </h4>
-                  <p className="text-sm text-gray-600 leading-relaxed">{result.results.description}</p>
+                  <MarkdownRenderer 
+                    content={result.results?.description || 'No description available'}
+                    variant="sm"
+                    className="text-sm text-gray-600 leading-relaxed"
+                  />
                 </div>
 
                 {/* Insights */}
@@ -242,17 +274,25 @@ const AIResultCard: React.FC<{ model: AIModelType; result: AIAnalysisResult }> =
                     Key Insights
                   </h4>
                   <div className="space-y-2">
-                    {result.results.insights.map((insight, index) => (
-                      <div key={index} className="flex items-start space-x-2">
-                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                        <p className="text-sm text-gray-600">{insight}</p>
-                      </div>
-                    ))}
+                    {result.results?.insights && result.results.insights.length > 0 ? (
+                      result.results.insights.map((insight, index) => (
+                        <div key={index} className="flex items-start space-x-2">
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                          <MarkdownRenderer 
+                            content={insight}
+                            variant="sm"
+                            className="text-sm text-gray-600 flex-1"
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">No insights generated</p>
+                    )}
                   </div>
                 </div>
 
                 {/* Entities */}
-                {result.results.entities.length > 0 && (
+                {result.results?.entities && result.results.entities.length > 0 && (
                   <div>
                     <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center">
                       <BarChart3 className="w-4 h-4 mr-1" />
@@ -273,12 +313,20 @@ const AIResultCard: React.FC<{ model: AIModelType; result: AIAnalysisResult }> =
                     Recommendations
                   </h4>
                   <div className="space-y-2">
-                    {result.results.recommendations.map((rec, index) => (
-                      <div key={index} className="flex items-start space-x-2">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-gray-600">{rec}</p>
-                      </div>
-                    ))}
+                    {result.results?.recommendations && result.results.recommendations.length > 0 ? (
+                      result.results.recommendations.map((rec, index) => (
+                        <div key={index} className="flex items-start space-x-2">
+                          <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <MarkdownRenderer 
+                            content={rec}
+                            variant="sm"
+                            className="text-sm text-gray-600 flex-1"
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">No recommendations available</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -313,9 +361,11 @@ const ConsolidatedInsightsCard: React.FC<{ insights: ConsolidatedInsights }> = (
           <h4 className="font-medium text-sm text-gray-700 mb-2">
             {isAuthError ? 'Access Denied' : 'Summary'}
           </h4>
-          <p className={`text-sm leading-relaxed ${isAuthError ? 'text-orange-600' : 'text-gray-600'}`}>
-            {insights.summary}
-          </p>
+          <MarkdownRenderer 
+            content={insights.summary}
+            variant="sm"
+            className={`text-sm leading-relaxed ${isAuthError ? 'text-orange-600' : 'text-gray-600'}`}
+          />
         </div>
 
         <Separator />
@@ -330,9 +380,11 @@ const ConsolidatedInsightsCard: React.FC<{ insights: ConsolidatedInsights }> = (
             {insights.recommendedActions.map((action, index) => (
               <div key={index} className="flex items-start space-x-2">
                 <Target className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isAuthError ? 'text-orange-500' : 'text-blue-500'}`} />
-                <p className={`text-sm ${isAuthError ? 'text-orange-600 font-medium' : 'text-gray-600'}`}>
-                  {action}
-                </p>
+                <MarkdownRenderer 
+                  content={action}
+                  variant="sm"
+                  className={`text-sm flex-1 ${isAuthError ? 'text-orange-600 font-medium' : 'text-gray-600'}`}
+                />
               </div>
             ))}
           </div>
@@ -351,7 +403,11 @@ const ConsolidatedInsightsCard: React.FC<{ insights: ConsolidatedInsights }> = (
                 {insights.commonFindings.map((finding, index) => (
                   <div key={index} className="flex items-start space-x-2">
                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">{finding}</p>
+                    <MarkdownRenderer 
+                      content={finding}
+                      variant="sm"
+                      className="text-sm text-gray-600 flex-1"
+                    />
                   </div>
                 ))}
               </div>
@@ -377,7 +433,11 @@ const ConsolidatedInsightsCard: React.FC<{ insights: ConsolidatedInsights }> = (
                           </Badge>
                         ))}
                       </div>
-                      <p className="text-xs text-gray-600">{conflict.resolution}</p>
+                      <MarkdownRenderer 
+                        content={conflict.resolution}
+                        variant="sm"
+                        className="text-xs text-gray-600"
+                      />
                     </Card>
                   ))}
                 </div>
@@ -416,17 +476,65 @@ export const MultiAnalysisResults: React.FC<MultiAnalysisResultsProps> = ({
   result, 
   className = '' 
 }) => {
-  const [activeTab, setActiveTab] = useState('consolidated');
+  // Safely get AI models and check for valid results
+  const aiModels = result.aiResults && typeof result.aiResults === 'object' 
+    ? Object.keys(result.aiResults).filter(key => 
+        result.aiResults![key as AIModelType] && 
+        typeof result.aiResults![key as AIModelType] === 'object' &&
+        result.aiResults![key as AIModelType].results
+      ) as AIModelType[] 
+    : [];
+    
+  const hasAIResults = aiModels.length > 0;
+  const hasCNNResults = !!result.cnnResults;
+  const hasConsolidated = !!result.consolidatedInsights;
+
+  // Set default tab based on available results
+  const getDefaultTab = () => {
+    if (hasConsolidated) return 'consolidated';
+    if (hasAIResults) return 'ai-models';
+    if (hasCNNResults) return 'cnn';
+    return 'comparison';
+  };
+
+  const [activeTab, setActiveTab] = useState(getDefaultTab());
   
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     // You can add a toast notification here
   };
 
-  const aiModels = result.aiResults ? Object.keys(result.aiResults) as AIModelType[] : [];
-  const hasAIResults = aiModels.length > 0;
-  const hasCNNResults = !!result.cnnResults;
-  const hasConsolidated = !!result.consolidatedInsights;
+  // Debug logging to help identify issues
+  console.log('🔍 MultiAnalysisResults Debug:', {
+    result,
+    aiModels,
+    hasAIResults,
+    hasConsolidated,
+    aiResultsType: typeof result.aiResults,
+    aiResultsKeys: result.aiResults ? Object.keys(result.aiResults) : 'none',
+    defaultTab: getDefaultTab()
+  });
+
+  // If no results available, show a helpful message
+  if (!hasAIResults && !hasCNNResults && !hasConsolidated) {
+    return (
+      <Card className="h-full">
+        <CardContent className="flex items-center justify-center h-full min-h-[400px]">
+          <div className="text-center space-y-4">
+            <Brain className="w-12 h-12 text-gray-400 mx-auto" />
+            <div>
+              <p className="text-lg font-medium text-gray-600">
+                No Analysis Results Available
+              </p>
+              <p className="text-sm text-gray-500">
+                Results are being processed or an error occurred. Please try again.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <motion.div
@@ -525,13 +633,25 @@ export const MultiAnalysisResults: React.FC<MultiAnalysisResultsProps> = ({
               {hasAIResults && (
                 <TabsContent value="ai-models" className="mt-0">
                   <div className="space-y-4">
-                    {aiModels.map(model => (
-                      <AIResultCard 
-                        key={model}
-                        model={model}
-                        result={result.aiResults![model]}
-                      />
-                    ))}
+                    {aiModels.map(model => {
+                      const modelResult = result.aiResults![model];
+                      if (!modelResult) {
+                        return (
+                          <Card key={model} className="p-4">
+                            <div className="text-center text-gray-500">
+                              No results available for {model}
+                            </div>
+                          </Card>
+                        );
+                      }
+                      return (
+                        <AIResultCard 
+                          key={model}
+                          model={model}
+                          result={modelResult}
+                        />
+                      );
+                    })}
                   </div>
                 </TabsContent>
               )}

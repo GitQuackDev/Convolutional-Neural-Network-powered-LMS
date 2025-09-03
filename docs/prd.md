@@ -6,6 +6,7 @@
 |--------|------|---------|-------------|---------|
 | Initial Creation | 2025-08-31 | 1.0 | Brownfield enhancement PRD for AI models, analytics, and real-time communication | John (Product Manager) |
 | **CRITICAL UPDATE** | 2025-08-31 | 1.1 | **Authentication reconstruction added as Story 1.0 - BLOCKS ALL OTHER STORIES** | Winston (Architect) |
+| **ARCHITECTURAL UPDATE** | 2025-09-02 | 1.2 | **OpenRouter integration implemented instead of direct OpenAI/Anthropic/Google APIs - Cost optimization through free tier models (DeepSeek Chat v3.1, Gemini 2.5 Flash) as primary options** | James (Dev) |
 
 ---
 
@@ -58,7 +59,7 @@ The current LMS CNN system successfully analyzes visual content and connects lea
 
 ### Functional Requirements
 
-• **FR1**: The system shall integrate multiple AI models (GPT-4, Claude, Gemini) alongside existing CNN analysis to provide comprehensive content analysis including text extraction, concept identification, and learning pathway suggestions
+• **FR1**: The system shall integrate multiple AI models via OpenRouter (DeepSeek Chat v3.1, Gemini 2.5 Flash free tier, plus premium models) alongside existing CNN analysis to provide comprehensive content analysis including text extraction, concept identification, and learning pathway suggestions
 
 • **FR2**: The system shall generate real-time analytics dashboards showing student engagement metrics, content interaction patterns, learning progress trajectories, and CNN analysis effectiveness
 

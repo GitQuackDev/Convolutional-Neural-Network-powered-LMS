@@ -41,12 +41,18 @@ export class WebSocketService {
     }
 
     try {
+      // Get the latest model being processed from the modelProgress
+      const modelProgressEntries = Object.entries(progress.modelProgress);
+      const latestModel = modelProgressEntries.length > 0 ? modelProgressEntries[0] : null;
+      
       // Emit to analytics namespace for the specific user
       this.io.of('/analytics').to(`user:${userId}`).emit('progress', {
         type: 'analysis_progress',
         userId: userId,
         analysisId: progress.analysisId,
         progress: progress.overallProgress,
+        modelType: latestModel ? latestModel[0] : undefined,
+        status: latestModel ? latestModel[1].status : 'processing',
         data: {
           analysisId: progress.analysisId,
           overallProgress: progress.overallProgress,
@@ -55,7 +61,6 @@ export class WebSocketService {
         }
       });
       
-      console.log(`📊 Emitted analysis progress for ${progress.analysisId}: ${progress.overallProgress}%`);
     } catch (error) {
       console.error('Failed to emit analysis progress:', error);
     }
@@ -82,6 +87,8 @@ export class WebSocketService {
         userId: userId,
         analysisId: analysisId,
         progress: progress,
+        modelType: model,
+        status: status,
         data: {
           model,
           progress,
@@ -90,7 +97,6 @@ export class WebSocketService {
         }
       });
       
-      console.log(`🔄 Emitted ${model} progress for ${analysisId}: ${progress}% (${status})`);
     } catch (error) {
       console.error('Failed to emit model progress:', error);
     }

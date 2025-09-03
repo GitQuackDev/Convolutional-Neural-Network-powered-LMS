@@ -31,6 +31,8 @@ export interface ProgressEvent {
   userId: string;
   analysisId?: string;
   progress?: number;
+  modelType?: string | undefined;
+  status?: string | undefined;
   data: Record<string, any>;
 }
 

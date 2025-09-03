@@ -326,8 +326,42 @@ export const ContentUploadInterface: React.FC<ContentUploadProps> = ({
   // Get progress for the currently selected file
   const currentProgress = selectedFileForAnalysis ? getAnalysisProgress(selectedFileForAnalysis) : null;
 
+  // Debug logging for results rendering
+  console.log('🎯 DEBUG: ContentUploadInterface rendering state:', {
+    selectedFileForAnalysis,
+    multiAnalysisResult,
+    hasAiResults: multiAnalysisResult?.aiResults ? Object.keys(multiAnalysisResult.aiResults).length : 0,
+    hasConsolidatedInsights: !!multiAnalysisResult?.consolidatedInsights,
+    overallStatus: multiAnalysisResult?.overallStatus,
+    aiResultsKeys: multiAnalysisResult?.aiResults ? Object.keys(multiAnalysisResult.aiResults) : [],
+    aiResultsContent: multiAnalysisResult?.aiResults
+  });
+
   // Determine which result to show - prefer multi-analysis if available
   const hasMultiAnalysis = multiAnalysisResult && (multiAnalysisResult.aiResults || multiAnalysisResult.consolidatedInsights);
+  
+  console.log('🔍 DEBUG: Rendering decision:', {
+    hasMultiAnalysis,
+    conditionCheck: {
+      hasMultiAnalysisResult: !!multiAnalysisResult,
+      hasAiResults: !!(multiAnalysisResult?.aiResults),
+      hasConsolidatedInsights: !!(multiAnalysisResult?.consolidatedInsights),
+      aiResultsNotEmpty: multiAnalysisResult?.aiResults ? Object.keys(multiAnalysisResult.aiResults).length > 0 : false
+    }
+  });
+
+  // Additional check for AI results content
+  if (multiAnalysisResult?.aiResults) {
+    Object.entries(multiAnalysisResult.aiResults).forEach(([model, result]) => {
+      console.log(`🤖 DEBUG: ${model} result:`, {
+        hasResult: !!result,
+        hasResults: !!result?.results,
+        hasDescription: !!result?.results?.description,
+        hasInsights: !!result?.results?.insights,
+        insightCount: result?.results?.insights?.length || 0
+      });
+    });
+  }
   const hasActiveAnalysis = currentProgress && Object.keys(currentProgress.modelProgress).length > 0;
 
   return (

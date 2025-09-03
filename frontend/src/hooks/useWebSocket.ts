@@ -48,10 +48,7 @@ export const useWebSocket = (namespace = '/analytics') => {
 
   useEffect(() => {
     // Don't connect if no auth token
-    console.log('🔍 WebSocket useEffect triggered:', { hasToken: !!authToken, namespace });
-    
     if (!authToken) {
-      console.log('❌ No auth token found, skipping WebSocket connection');
       setIsConnected(false);
       setConnectionError(null);
       return;

@@ -183,8 +183,31 @@ Be concrete and avoid generic responses. Focus on the actual content provided.`
   }
 
   private extractKeyPoints(analysis: string): string[] {
-    // Simple extraction - could be enhanced with NLP
-    const sentences = analysis.split(/[.!?]+/).filter(s => s.trim().length > 20);
+    // Enhanced extraction to handle numbered lists properly
+    const text = analysis.trim();
+    
+    // If the response starts with numbered list format, extract properly
+    if (text.includes('1.') && text.includes('2.')) {
+      // Find numbered sections and extract meaningful content
+      const numberedSections = text.match(/\d+\.\s+\*\*[^*]+\*\*[^]*?(?=\d+\.\s+\*\*|\n\s*\n|$)/g);
+      if (numberedSections && numberedSections.length > 0) {
+        return numberedSections.slice(0, 3).map(section => {
+          // Remove the number and extract the main content
+          const content = section.replace(/^\d+\.\s+\*\*[^*]+\*\*:?\s*/, '').trim();
+          // Take first meaningful sentence
+          const sentences = content.split(/[.!?]+/);
+          const firstSentence = sentences.length > 0 && sentences[0] ? sentences[0].trim() : '';
+          return firstSentence.length > 20 ? firstSentence : content.substring(0, 100) + '...';
+        });
+      }
+    }
+    
+    // Fallback to sentence-based extraction, but avoid cutting off numbered lists
+    const sentences = text.split(/[.!?]+/)
+      .filter(s => s.trim().length > 20)
+      .filter(s => !s.trim().match(/^\d+$/)) // Remove standalone numbers
+      .map(s => s.replace(/^\s*\d+\.\s*/, '').trim()); // Remove leading numbers
+    
     return sentences.slice(0, 3).map(s => s.trim());
   }
 
