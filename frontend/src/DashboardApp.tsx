@@ -4,6 +4,7 @@ import { MainNavigation } from '@/components/navigation';
 import { StudentDashboard } from '@/components/dashboard';
 import { CourseModuleView } from '@/components/courses';
 import { AssignmentSubmission } from '@/components/assignments';
+import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -125,6 +126,31 @@ export function DashboardApp() {
           <div className="w-full px-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-6">Discussions</h1>
             <p className="text-gray-600">Discussion forum coming soon...</p>
+          </div>
+        );
+      case 'professor-analytics':
+        // Only professors and admins can access analytics
+        if (user?.role === 'professor' || user?.role === 'admin') {
+          return <AnalyticsDashboard userRole={user.role as 'professor' | 'admin'} />;
+        }
+        return (
+          <div className="w-full px-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">Access Denied</h1>
+            <p className="text-gray-600">You don't have permission to access analytics.</p>
+          </div>
+        );
+      case 'professor-dashboard':
+        return (
+          <div className="w-full px-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">Professor Dashboard</h1>
+            <p className="text-gray-600">Professor dashboard coming soon...</p>
+          </div>
+        );
+      case 'professor-courses':
+        return (
+          <div className="w-full px-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">Manage Courses</h1>
+            <p className="text-gray-600">Course management coming soon...</p>
           </div>
         );
       default:

@@ -45,6 +45,15 @@ model User {
   sentMessages      ChatMessage[]
   notifications     Notification[]
   
+  // Collaboration annotation relations
+  authoredAnnotations CollaborationAnnotation[] @relation("AnnotationAuthor")
+  resolvedAnnotations CollaborationAnnotation[] @relation("AnnotationResolver")
+  moderatedAnnotations CollaborationAnnotation[] @relation("AnnotationModerator")
+  
+  // Advanced insights and reporting relations (Story 1.9)
+  generatedInsights GeneratedInsight[] @relation("UserInsights")
+  generatedReports  AdvancedReport[]   @relation("UserReports")
+  
   @@map("users")
 }
 
@@ -79,6 +88,9 @@ model Course {
   assignments      Assignment[]
   discussions      Discussion[]
   chatMessages     ChatMessage[]
+  
+  // Advanced insights relations (Story 1.9)
+  insights         GeneratedInsight[] @relation("CourseInsights")
 
   @@map("courses")
 }
@@ -467,4 +479,227 @@ enum NotificationPriority {
   NORMAL
   HIGH
   URGENT
+}
+
+// Collaborative Annotations
+model CollaborationAnnotation {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  contentId       String           @db.ObjectId // Associated content (assignment, course material, etc.)
+  contentType     AnnotationContentType
+  authorId        String           @db.ObjectId
+  text            String           // Annotation text content
+  position        Json             // Position data: {x, y, width, height, page?}
+  selectionData   Json?            // Text selection: {start, end, selectedText}
+  annotationType  AnnotationType   @default(COMMENT)
+  isResolved      Boolean          @default(false)
+  resolvedAt      DateTime?
+  resolvedBy      String?          @db.ObjectId
+  threadId        String?          @db.ObjectId // For threaded replies
+  parentId        String?          @db.ObjectId // For direct replies
+  visibility      AnnotationVisibility @default(COURSE)
+  permissions     Json             // Role-based visibility: {instructor: true, students: false}
+  metadata        Json?            // Additional data: tags, category, etc.
+  
+  // Moderation fields
+  isHidden        Boolean          @default(false)
+  isFlagged       Boolean          @default(false)
+  isDeleted       Boolean          @default(false)
+  deletedAt       DateTime?
+  moderationStatus String?         // PENDING, APPROVED, HIDDEN, FLAGGED, DELETED
+  moderationReason String?
+  moderatedAt     DateTime?
+  moderatedBy     String?          @db.ObjectId
+  
+  version         Int              @default(1)
+  isEdited        Boolean          @default(false)
+  editedAt        DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  author          User             @relation("AnnotationAuthor", fields: [authorId], references: [id])
+  resolver        User?            @relation("AnnotationResolver", fields: [resolvedBy], references: [id])
+  moderator       User?            @relation("AnnotationModerator", fields: [moderatedBy], references: [id])
+  thread          CollaborationAnnotation? @relation("AnnotationThread", fields: [threadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies         CollaborationAnnotation[] @relation("AnnotationThread")
+  parent          CollaborationAnnotation? @relation("AnnotationReply", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children        CollaborationAnnotation[] @relation("AnnotationReply")
+  
+  @@index([contentId, contentType, createdAt])
+  @@index([authorId, createdAt])
+  @@index([threadId, createdAt])
+  @@index([contentId, visibility, isResolved])
+  @@index([moderationStatus, isFlagged, isHidden])
+  @@map("collaboration_annotations")
+}
+
+enum AnnotationContentType {
+  ASSIGNMENT
+  COURSE_MATERIAL
+  CNN_ANALYSIS
+  CHAT_MESSAGE
+  UPLOADED_FILE
+}
+
+enum AnnotationType {
+  COMMENT
+  QUESTION
+  SUGGESTION
+  HIGHLIGHT
+  DRAWING
+  BOOKMARK
+}
+
+enum AnnotationVisibility {
+  PRIVATE      // Only author can see
+  COURSE       // All course members
+  INSTRUCTORS  // Only instructors
+  STUDY_GROUP  // Study group members
+  PUBLIC       // All platform users
+}
+
+// Advanced Insights and Reporting System (Story 1.9)
+model GeneratedInsight {
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  type              InsightType
+  title             String
+  description       String
+  confidence        Float
+  userId            String              @db.ObjectId
+  courseId          String?             @db.ObjectId
+  contentId         String?             @db.ObjectId
+  analyticsDataIds  String[]            @db.ObjectId // References to analytics data used
+  aiResultIds       String[]            @db.ObjectId // References to AI analysis results used
+  supportingData    Json
+  isActionable      Boolean             @default(false)
+  isResolved        Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  user              User                @relation("UserInsights", fields: [userId], references: [id])
+  course            Course?             @relation("CourseInsights", fields: [courseId], references: [id])
+  recommendations   Recommendation[]    @relation("InsightRecommendations")
+  
+  @@index([type, confidence])
+  @@index([userId, courseId])
+  @@index([createdAt])
+  @@map("generated_insights")
+}
+
+model PredictiveInsight {
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  type              PredictionType
+  subject           String              @db.ObjectId // studentId, courseId, or contentId
+  subjectType       String              // 'user', 'course', 'content'
+  prediction        Json                // PredictionResult object
+  confidence        Float
+  factors           Json                // PredictionFactor[]
+  timeline          Json                // PredictionTimeline object
+  historicalDataIds String[]            @db.ObjectId // References to historical data used
+  createdAt         DateTime            @default(now())
+  expiresAt         DateTime            // When prediction becomes stale
+  
+  recommendations   Recommendation[]    @relation("PredictionRecommendations")
+  
+  @@index([type, confidence])
+  @@index([subject, subjectType])
+  @@index([createdAt])
+  @@map("predictive_insights")
+}
+
+model Recommendation {
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  type              RecommendationType
+  priority          RecommendationPriority
+  title             String
+  description       String
+  targetUserId      String?             @db.ObjectId
+  targetCourseId    String?             @db.ObjectId
+  targetContentId   String?             @db.ObjectId
+  actionRequired    String
+  expectedImpact    String
+  confidence        Float
+  sourceInsightId   String?             @db.ObjectId
+  sourcePredictionId String?            @db.ObjectId
+  isImplemented     Boolean             @default(false)
+  implementedAt     DateTime?
+  createdAt         DateTime            @default(now())
+  expiresAt         DateTime?
+  
+  sourceInsight     GeneratedInsight?   @relation("InsightRecommendations", fields: [sourceInsightId], references: [id])
+  sourcePrediction  PredictiveInsight?  @relation("PredictionRecommendations", fields: [sourcePredictionId], references: [id])
+  
+  @@index([type, priority])
+  @@index([targetUserId, targetCourseId])
+  @@index([createdAt])
+  @@map("recommendations")
+}
+
+model AdvancedReport {
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  templateId        String
+  filters           Json                // InsightFilters object
+  sections          Json                // ReportSection[]
+  executiveSummary  Json                // ExecutiveSummary object
+  recommendations   Json                // Recommendation[]
+  format            ReportFormat
+  generatedBy       String              @db.ObjectId
+  generatedAt       DateTime            @default(now())
+  downloadUrl       String?
+  isScheduled       Boolean             @default(false)
+  scheduleConfig    Json?               // ScheduleConfiguration object
+  
+  generatedByUser   User                @relation("UserReports", fields: [generatedBy], references: [id])
+  
+  @@index([generatedBy, generatedAt])
+  @@index([isScheduled])
+  @@map("advanced_reports")
+}
+
+// Enums for Advanced Insights System
+enum InsightType {
+  PERFORMANCE_TREND
+  CONTENT_EFFECTIVENESS
+  ENGAGEMENT_PATTERN
+  PREDICTIVE_ALERT
+  RECOMMENDATION
+  LEARNING_OUTCOME
+  BEHAVIORAL_PATTERN
+  INTERVENTION_NEEDED
+}
+
+enum PredictionType {
+  STUDENT_PERFORMANCE
+  CONTENT_ENGAGEMENT
+  COURSE_COMPLETION
+  LEARNING_DIFFICULTY
+  INTERVENTION_NEEDED
+  DROPOUT_RISK
+  SUCCESS_PROBABILITY
+}
+
+enum RecommendationType {
+  CONTENT_OPTIMIZATION
+  TEACHING_STRATEGY
+  STUDENT_SUPPORT
+  COURSE_MODIFICATION
+  INTERVENTION_ACTION
+  ENGAGEMENT_IMPROVEMENT
+  PERSONALIZATION
+}
+
+enum RecommendationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+  URGENT
+}
+
+enum ReportFormat {
+  PDF
+  CSV
+  JSON
+  INTERACTIVE_WEB
+  PRESENTATION
 }

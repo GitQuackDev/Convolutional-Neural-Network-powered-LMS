@@ -184,6 +184,29 @@ export class ConnectionManager {
   }
 
   /**
+   * Get all connections for users in a specific course
+   */
+  getCourseConnections(courseId: string): Array<{ userId: string; socket: Socket; socketId: string }> {
+    const courseConnections: Array<{ userId: string; socket: Socket; socketId: string }> = [];
+    
+    // Iterate through all user connections
+    for (const [userId, socketIds] of this.userConnections.entries()) {
+      for (const socketId of socketIds) {
+        const socket = this.connections.get(socketId);
+        if (socket) {
+          // Check if user is connected to this course
+          const socketData = socket.data as SocketData;
+          if (socketData?.courseIds?.includes(courseId)) {
+            courseConnections.push({ userId, socket, socketId });
+          }
+        }
+      }
+    }
+    
+    return courseConnections;
+  }
+
+  /**
    * Graceful shutdown - disconnect all connections
    */
   async shutdown(): Promise<void> {

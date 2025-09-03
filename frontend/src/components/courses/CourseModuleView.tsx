@@ -22,6 +22,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { ContentAnnotationViewer } from '@/components/annotations/ContentAnnotationViewer';
+import { useAuth } from '@/hooks/useAuth';
 
 import type { CourseDetail, CourseStep } from '@/types/dashboard';
 import { cn } from '@/lib/utils';
@@ -65,6 +67,7 @@ export const CourseModuleView: React.FC<CourseModuleViewProps> = ({
   onNavigate,
   onStepComplete
 }) => {
+  const { user } = useAuth();
   const [expandedModules, setExpandedModules] = useState<string[]>([course.modules[0]?.id || '']);
 
   // Find the current step based on progress
@@ -293,26 +296,37 @@ export const CourseModuleView: React.FC<CourseModuleViewProps> = ({
                 </CardHeader>
                 
                 <CardContent>
-                  <div className="prose prose-gray max-w-none">
-                    {currentStepData.content ? (
-                      <div dangerouslySetInnerHTML={{ __html: currentStepData.content }} />
-                    ) : (
-                      <div className="text-center py-12 text-gray-500">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                          {getStepIcon(currentStepData.type, false, false)}
-                        </div>
-                        <p>Content for this step will be loaded here.</p>
-                        {currentStepData.type === 'upload' && (
-                          <Button 
-                            className="mt-4"
-                            onClick={() => onNavigate('assignment-submission', currentStepData.id)}
-                          >
-                            Start Upload Assignment
-                          </Button>
+                  {/* Wrap course content with annotation support */}
+                  <ContentAnnotationViewer
+                    contentId={currentStepData.id}
+                    contentType="DOCUMENT"
+                    courseId={course.id}
+                    userRole={user?.role?.toUpperCase() as 'STUDENT' | 'INSTRUCTOR' | 'ADMIN' || 'STUDENT'}
+                    showTabs={false}
+                    className="min-h-[400px]"
+                    contentElement={
+                      <div className="prose prose-gray max-w-none">
+                        {currentStepData.content ? (
+                          <div dangerouslySetInnerHTML={{ __html: currentStepData.content }} />
+                        ) : (
+                          <div className="text-center py-12 text-gray-500">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                              {getStepIcon(currentStepData.type, false, false)}
+                            </div>
+                            <p>Content for this step will be loaded here.</p>
+                            {currentStepData.type === 'upload' && (
+                              <Button 
+                                className="mt-4"
+                                onClick={() => onNavigate('assignment-submission', currentStepData.id)}
+                              >
+                                Start Upload Assignment
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
+                    }
+                  />
                 </CardContent>
               </Card>
             ) : (

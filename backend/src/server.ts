@@ -31,6 +31,8 @@ import aiModelsRoutes from './routes/ai-models';
 import aiAnalysisRoutes from './routes/ai-analysis';
 import realtimeRoutes from './routes/realtime';
 import analyticsRoutes from './routes/analytics';
+import annotationRoutes from './routes/annotations';
+import advancedInsightsRoutes from './routes/advanced-insights';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -125,6 +127,8 @@ app.use('/api/ai-models', aiModelsRoutes);
 app.use('/api/ai-analysis', aiAnalysisRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/annotations', annotationRoutes);
+app.use('/api/insights', advancedInsightsRoutes);
 
 // 404 handler
 app.use(notFound);

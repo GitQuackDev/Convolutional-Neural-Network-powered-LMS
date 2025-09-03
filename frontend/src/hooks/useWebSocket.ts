@@ -6,6 +6,12 @@
 import { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 import { authStorage } from '@/utils/authStorage';
+import type { 
+  AnalyticsMetrics, 
+  EngagementDataPoint, 
+  LearningProgressData, 
+  AIModelUsageData 
+} from '@/types/analytics';
 
 interface ProgressEvent {
   type: 'analysis_progress' | 'analysis_complete' | 'session_update';
@@ -15,8 +21,42 @@ interface ProgressEvent {
   data: Record<string, unknown>;
 }
 
+interface AnalyticsUpdateEvent {
+  type: 'metrics';
+  metrics: Partial<AnalyticsMetrics>;
+  timestamp: Date;
+}
+
+interface EngagementUpdateEvent {
+  type: 'engagement';
+  dataPoint: EngagementDataPoint;
+  timestamp: Date;
+}
+
+interface ProgressUpdateEvent {
+  type: 'progress';
+  dataPoint: LearningProgressData;
+  timestamp: Date;
+}
+
+interface AIUsageUpdateEvent {
+  type: 'ai_usage';
+  dataPoint: AIModelUsageData;
+  timestamp: Date;
+}
+
 interface WebSocketEvents {
   'progress': (data: ProgressEvent) => void;
+  'analytics_update': (data: AnalyticsUpdateEvent) => void;
+  'engagement_update': (data: EngagementUpdateEvent) => void;
+  'progress_update': (data: ProgressUpdateEvent) => void;
+  'ai_usage_update': (data: AIUsageUpdateEvent) => void;
+  'significant_change': (data: {
+    changeType: string;
+    percentageIncrease?: number;
+    milestone?: string;
+    timestamp: Date;
+  }) => void;
   'error': (message: string) => void;
   'connected': (data: { userId: string; timestamp: Date }) => void;
   'disconnected': () => void;

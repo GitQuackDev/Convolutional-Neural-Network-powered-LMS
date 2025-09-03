@@ -10,11 +10,15 @@ import {
   ServerToClientEvents, 
   ClientToServerEvents, 
   InterServerEvents, 
-  SocketData 
+  SocketData,
+  AuthenticatedSocket
 } from './types';
 import { authenticateSocket } from './AuthMiddleware';
 import { ConnectionManager } from './ConnectionManager';
 import { EventBroadcaster } from './EventBroadcaster';
+import { CollaborationHandler } from './CollaborationHandler';
+import { InsightsHandler } from './InsightsHandler';
+import { AdvancedInsightsService } from '../services/advancedInsightsService';
 
 export class WebSocketServer {
   private io: SocketIOServer<
@@ -26,6 +30,7 @@ export class WebSocketServer {
   
   private connectionManager: ConnectionManager | null = null;
   private eventBroadcaster: EventBroadcaster | null = null;
+  private insightsHandler: InsightsHandler | null = null;
 
   /**
    * Initialize WebSocket server with Express.js HTTP server
@@ -53,6 +58,14 @@ export class WebSocketServer {
       // Initialize connection manager and event broadcaster
       this.connectionManager = new ConnectionManager();
       this.eventBroadcaster = new EventBroadcaster(this.io, this.connectionManager);
+      
+      // Initialize insights handler
+      const insightsService = new AdvancedInsightsService();
+      this.insightsHandler = new InsightsHandler(
+        insightsService,
+        this.eventBroadcaster,
+        this.connectionManager
+      );
 
       // Setup authentication middleware
       this.io.use(authenticateSocket);
@@ -175,7 +188,18 @@ export class WebSocketServer {
     analyticsNamespace.use(authenticateSocket);
     analyticsNamespace.on('connection', (socket) => {
       console.log('📊 Client connected to analytics namespace');
-      // TODO: Setup analytics-specific handlers (will be implemented in Story 1.4)
+      
+      const socketData = socket.data as SocketData;
+      if (socketData?.userId && this.insightsHandler) {
+        this.insightsHandler.handleConnection(socket, socketData.userId);
+        
+        // Setup disconnection handler
+        socket.on('disconnect', () => {
+          if (this.insightsHandler) {
+            this.insightsHandler.handleDisconnection(socket, socketData.userId);
+          }
+        });
+      }
     });
 
     // Collaboration namespace for annotations and collaborative features
@@ -183,7 +207,9 @@ export class WebSocketServer {
     collaborationNamespace.use(authenticateSocket);
     collaborationNamespace.on('connection', (socket) => {
       console.log('🤝 Client connected to collaboration namespace');
-      // TODO: Setup collaboration-specific handlers (will be implemented in Story 1.8)
+      
+      // Initialize collaboration handler for this socket
+      new CollaborationHandler(socket as AuthenticatedSocket);
     });
   }
 
@@ -234,12 +260,20 @@ export class WebSocketServer {
   }
 
   /**
+   * Get insights handler instance
+   */
+  getInsightsHandler(): InsightsHandler | null {
+    return this.insightsHandler;
+  }
+
+  /**
    * Get server statistics
    */
   getServerStats(): {
     isInitialized: boolean;
     connectionStats?: ReturnType<ConnectionManager['getConnectionStats']>;
     broadcastStats?: ReturnType<EventBroadcaster['getBroadcastStats']>;
+    insightsStats?: any;
   } {
     if (!this.io || !this.connectionManager || !this.eventBroadcaster) {
       return { isInitialized: false };
@@ -248,7 +282,8 @@ export class WebSocketServer {
     return {
       isInitialized: true,
       connectionStats: this.connectionManager.getConnectionStats(),
-      broadcastStats: this.eventBroadcaster.getBroadcastStats()
+      broadcastStats: this.eventBroadcaster.getBroadcastStats(),
+      insightsStats: this.insightsHandler?.getSubscriptionStats()
     };
   }
 

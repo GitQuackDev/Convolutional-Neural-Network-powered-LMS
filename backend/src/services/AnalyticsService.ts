@@ -199,7 +199,7 @@ export class AnalyticsService {
         prisma.userAnalytics.groupBy({
           by: ['userId'],
           where: { timestamp: { gte: startDate } }
-        }).then(groups => groups.length),
+        }).then((groups: any) => groups.length),
         
         prisma.userAnalytics.count({
           where: { timestamp: { gte: startDate } }
@@ -218,7 +218,7 @@ export class AnalyticsService {
         select: { cnnAnalysisUsage: true }
       });
 
-      const cnnAnalyses = analyticsWithCNN.filter(record => 
+      const cnnAnalyses = analyticsWithCNN.filter((record: any) => 
         record.cnnAnalysisUsage && Object.keys(record.cnnAnalysisUsage as object).length > 0
       ).length;
 
@@ -315,5 +315,199 @@ export class AnalyticsService {
     return analytics.filter(record => 
       record.cnnAnalysisUsage && Object.keys(record.cnnAnalysisUsage as object).length > 0
     ).length;
+  }
+
+  /**
+   * Get aggregated analytics data for insights generation
+   */
+  async getAggregatedData(filters?: any): Promise<any> {
+    try {
+      const whereClause: any = {};
+      
+      if (filters?.userId) {
+        whereClause.userId = filters.userId;
+      }
+      
+      if (filters?.courseId) {
+        whereClause.courseId = filters.courseId;
+      }
+      
+      if (filters?.startDate || filters?.endDate) {
+        whereClause.timestamp = {};
+        if (filters.startDate) {
+          whereClause.timestamp.gte = new Date(filters.startDate);
+        }
+        if (filters.endDate) {
+          whereClause.timestamp.lte = new Date(filters.endDate);
+        }
+      }
+
+      // Get analytics data
+      const analyticsData = await prisma.userAnalytics.findMany({
+        where: whereClause,
+        include: {
+          user: true
+        },
+        orderBy: { timestamp: 'desc' }
+      });
+
+      // Get session data
+      const sessionData = await prisma.sessionMetrics.findMany({
+        where: whereClause.userId ? { userId: whereClause.userId } : {},
+        orderBy: { sessionStart: 'desc' }
+      });
+
+      // Aggregate the data
+      return {
+        userEngagement: this.aggregateEngagementData(analyticsData),
+        contentInteractions: this.aggregateContentInteractions(analyticsData),
+        performanceMetrics: this.aggregatePerformanceMetrics(analyticsData),
+        sessionData: this.aggregateSessionData(sessionData),
+        totalUsers: await prisma.user.count(),
+        totalSessions: sessionData.length,
+        timeRange: {
+          start: filters?.startDate,
+          end: filters?.endDate
+        }
+      };
+    } catch (error) {
+      console.error('Error getting aggregated data:', error);
+      throw new Error('Failed to get aggregated analytics data');
+    }
+  }
+
+  private aggregateEngagementData(analyticsData: any[]): any {
+    const engagement = {
+      totalInteractions: analyticsData.length,
+      averageSessionDuration: 0,
+      topPages: {} as any,
+      topActions: {} as any,
+      userActivity: {} as any
+    };
+
+    analyticsData.forEach(record => {
+      // Track page views
+      if (record.pageViews && typeof record.pageViews === 'object') {
+        Object.keys(record.pageViews).forEach(page => {
+          engagement.topPages[page] = (engagement.topPages[page] || 0) + record.pageViews[page];
+        });
+      }
+
+      // Track content interactions
+      if (record.contentInteractions && typeof record.contentInteractions === 'object') {
+        const action = record.contentInteractions.action;
+        if (action) {
+          engagement.topActions[action] = (engagement.topActions[action] || 0) + 1;
+        }
+      }
+
+      // Track user activity
+      if (record.userId) {
+        engagement.userActivity[record.userId] = (engagement.userActivity[record.userId] || 0) + 1;
+      }
+    });
+
+    return engagement;
+  }
+
+  private aggregateContentInteractions(analyticsData: any[]): any {
+    const interactions = {
+      totalInteractions: 0,
+      byContentType: {} as any,
+      byAction: {} as any,
+      averageDuration: 0,
+      totalDuration: 0
+    };
+
+    analyticsData.forEach(record => {
+      if (record.contentInteractions && typeof record.contentInteractions === 'object') {
+        const interaction = record.contentInteractions;
+        interactions.totalInteractions++;
+
+        if (interaction.resource) {
+          interactions.byContentType[interaction.resource] = (interactions.byContentType[interaction.resource] || 0) + 1;
+        }
+
+        if (interaction.action) {
+          interactions.byAction[interaction.action] = (interactions.byAction[interaction.action] || 0) + 1;
+        }
+
+        if (interaction.duration) {
+          interactions.totalDuration += interaction.duration;
+        }
+      }
+    });
+
+    if (interactions.totalInteractions > 0) {
+      interactions.averageDuration = interactions.totalDuration / interactions.totalInteractions;
+    }
+
+    return interactions;
+  }
+
+  private aggregatePerformanceMetrics(analyticsData: any[]): any {
+    const metrics = {
+      responseTimeAverage: 0,
+      successRate: 0,
+      errorRate: 0,
+      totalRequests: 0,
+      successfulRequests: 0,
+      failedRequests: 0
+    };
+
+    analyticsData.forEach(record => {
+      if (record.contentInteractions && typeof record.contentInteractions === 'object') {
+        const interaction = record.contentInteractions;
+        metrics.totalRequests++;
+
+        if (interaction.statusCode >= 200 && interaction.statusCode < 400) {
+          metrics.successfulRequests++;
+        } else {
+          metrics.failedRequests++;
+        }
+      }
+    });
+
+    if (metrics.totalRequests > 0) {
+      metrics.successRate = metrics.successfulRequests / metrics.totalRequests;
+      metrics.errorRate = metrics.failedRequests / metrics.totalRequests;
+    }
+
+    return metrics;
+  }
+
+  private aggregateSessionData(sessionData: any[]): any {
+    const sessions = {
+      totalSessions: sessionData.length,
+      averageDuration: 0,
+      totalDuration: 0,
+      uniqueUsers: new Set(),
+      averageEngagement: 0,
+      totalEngagement: 0
+    };
+
+    sessionData.forEach(session => {
+      if (session.userId) {
+        sessions.uniqueUsers.add(session.userId);
+      }
+
+      if (session.activeTime) {
+        sessions.totalDuration += session.activeTime;
+      }
+
+      if (session.engagementScore) {
+        sessions.totalEngagement += session.engagementScore;
+      }
+    });
+
+    if (sessions.totalSessions > 0) {
+      sessions.averageDuration = sessions.totalDuration / sessions.totalSessions;
+      sessions.averageEngagement = sessions.totalEngagement / sessions.totalSessions;
+    }
+
+    return {
+      ...sessions,
+      uniqueUsers: sessions.uniqueUsers.size
+    };
   }
 }
