@@ -22,13 +22,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { useWebSocket } from '@/hooks/useWebSocket';
+import { useAnalyticsWebSocket } from '@/hooks/useAnalyticsWebSocket';
+import { useToast } from '@/hooks/use-toast';
 import { apiService } from '@/services/apiService';
 import { MetricCard } from './MetricCard';
 import { EngagementChart } from './EngagementChart';
 import { ProgressChart } from './ProgressChart';
 import { AIModelUsageChart } from './AIModelUsageChart';
 import { RealtimeActivityFeed } from './RealtimeActivityFeed';
+import { LiveEngagementMetrics } from './LiveEngagementMetrics';
 
 import type { 
   AnalyticsMetrics, 
@@ -50,7 +52,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   className = ''
 }) => {
   const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
-  const [engagementData, setEngagementData] = useState<EngagementDataPoint[]>([]);
+  const [localEngagementData, setLocalEngagementData] = useState<EngagementDataPoint[]>([]);
   const [progressData, setProgressData] = useState<LearningProgressData[]>([]);
   const [aiModelUsage, setAIModelUsage] = useState<AIModelUsageData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,56 +65,147 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     timeGranularity: 'day'
   });
   
+  // Initialize toast for notifications
+  const { toast } = useToast();
+  
   // WebSocket connection for real-time updates
-  const { isConnected, connectionError, subscribe, emit } = useWebSocket('/analytics');
+  const {
+    isConnected,
+    connectionError,
+    analyticsData,
+    progressUpdates,
+    engagementData: realtimeEngagementData,
+    significantChanges,
+    requestAnalytics,
+    clearSignificantChanges
+  } = useAnalyticsWebSocket({
+    autoConnect: true,
+    significantChangeSeverity: 'medium'
+  });
 
   // Real-time data handlers
   useEffect(() => {
     if (!isConnected) return;
 
-    // Subscribe to real-time analytics events
-    const unsubscribeMetrics = subscribe('analytics_update', (data) => {
-      console.log('📊 Real-time metrics update:', data);
-      if (data.metrics) {
-        setMetrics(prev => prev ? { ...prev, ...data.metrics } : data.metrics as AnalyticsMetrics);
+    // Handle real-time analytics updates
+    if (analyticsData) {
+      console.log('📊 Real-time analytics update:', analyticsData);
+      if (analyticsData.metrics) {
+        setMetrics(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            ...analyticsData.metrics,
+            timestamp: new Date(analyticsData.timestamp)
+          };
+        });
+      }
+    }
+  }, [analyticsData, isConnected]);
+
+  // Handle real-time engagement updates
+  useEffect(() => {
+    if (!isConnected || !realtimeEngagementData) return;
+
+    console.log('👥 Real-time engagement update:', realtimeEngagementData);
+    if (realtimeEngagementData.dataPoint) {
+      setLocalEngagementData(prev => [
+        ...prev.slice(-29), // Keep last 30 data points
+        {
+          ...realtimeEngagementData.dataPoint,
+          timestamp: new Date(realtimeEngagementData.timestamp)
+        }
+      ]);
+    }
+
+    // Update metrics with aggregated data if available
+    if (realtimeEngagementData.aggregatedData) {
+      setMetrics(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          activeUsers: realtimeEngagementData.aggregatedData!.activeUsers,
+          totalSessions: realtimeEngagementData.aggregatedData!.totalSessions,
+          averageSessionDuration: realtimeEngagementData.aggregatedData!.averageSessionTime,
+          timestamp: new Date(realtimeEngagementData.timestamp)
+        };
+      });
+    }
+  }, [realtimeEngagementData, isConnected]);
+
+  // Handle real-time progress updates
+  useEffect(() => {
+    if (!isConnected || progressUpdates.size === 0) return;
+
+    console.log('📈 Real-time progress updates:', progressUpdates);
+    const progressArray = Array.from(progressUpdates.values());
+    
+    // Update progress data with real-time information
+    setProgressData(prev => {
+      const updated = [...prev];
+      progressArray.forEach(update => {
+        if (update.data.userId) {
+          const existingIndex = updated.findIndex(item => 
+            item.userId === update.data.userId || item.courseId === update.data.contentId
+          );
+          
+          if (existingIndex >= 0) {
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              progressScore: update.progress,
+              lastActivity: new Date(update.timestamp)
+            };
+          }
+        }
+      });
+      return updated;
+    });
+  }, [progressUpdates, isConnected]);
+
+  // Handle significant changes and show notifications
+  useEffect(() => {
+    if (!isConnected || significantChanges.length === 0) return;
+
+    // Process new significant changes
+    significantChanges.forEach(change => {
+      console.log('🚨 Significant analytics change detected:', change);
+      
+      // Show notification for major changes
+      if (change.severity === 'high' || change.severity === 'critical') {
+        toast(`Analytics Alert: ${change.description}`, { 
+          type: change.severity === 'critical' ? 'error' : 'info' 
+        });
+      }
+      
+      // Handle specific change types
+      if (change.changeType === 'threshold_exceeded' && change.value) {
+        toast(`📈 ${change.metric} threshold exceeded: ${change.value}`, { type: 'info' });
+      }
+      
+      if (change.changeType === 'anomaly_detected') {
+        toast(`⚠️ Anomaly detected in ${change.metric}`, { type: 'error' });
       }
     });
 
-    const unsubscribeEngagement = subscribe('engagement_update', (data) => {
-      console.log('👥 Real-time engagement update:', data);
-      setEngagementData(prev => [...prev.slice(-29), data.dataPoint]);
-    });
+    // Clear processed changes after a delay
+    const timeoutId = setTimeout(() => {
+      clearSignificantChanges();
+    }, 5000);
 
-    const unsubscribeProgress = subscribe('progress_update', (data) => {
-      console.log('📈 Real-time progress update:', data);
-      setProgressData(prev => [...prev.slice(-19), data.dataPoint]);
-    });
+    return () => clearTimeout(timeoutId);
+  }, [significantChanges, isConnected, toast, clearSignificantChanges]);
 
-    const unsubscribeAIUsage = subscribe('ai_usage_update', (data) => {
-      console.log('🤖 Real-time AI usage update:', data);
-      setAIModelUsage(prev => [...prev.slice(-9), data.dataPoint]);
-    });
-
-    // Request initial real-time data subscription
-    emit('subscribe_analytics', {
-      filters,
-      realTimeOnly: false
-    });
-
-    return () => {
-      unsubscribeMetrics?.();
-      unsubscribeEngagement?.();
-      unsubscribeProgress?.();
-      unsubscribeAIUsage?.();
-    };
-  }, [isConnected, subscribe, emit, filters]);
-
-  // Refresh real-time subscription when filters change
+  // Request real-time analytics subscription when filters change
   useEffect(() => {
-    if (isConnected) {
-      emit('update_subscription', { filters });
+    if (isConnected && requestAnalytics) {
+      console.log('🔄 Requesting analytics with filters:', filters);
+      requestAnalytics({
+        courseId: filters.courseId,
+        timeRange: filters.timeGranularity === 'day' ? 'day' : 'week',
+        metrics: ['engagement', 'progress', 'ai_usage']
+      });
     }
-  }, [filters, isConnected, emit]);
+  }, [filters, isConnected, requestAnalytics]);
 
   // Load initial dashboard data
   const loadDashboardData = React.useCallback(async () => {
@@ -184,7 +277,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       }));
 
       setMetrics(transformedMetrics);
-      setEngagementData(transformedEngagement);
+      setLocalEngagementData(transformedEngagement);
       setProgressData(transformedProgress);
       setAIModelUsage(transformedAIUsage);
     } catch (error) {
@@ -212,28 +305,6 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
     return () => clearInterval(interval);
   }, [isConnected, loadDashboardData]);
-
-  // Real-time notification system for significant engagement changes
-  useEffect(() => {
-    if (!isConnected) return;
-
-    const unsubscribeNotification = subscribe('significant_change', (data) => {
-      console.log('🚨 Significant analytics change detected:', data);
-      
-      // Show notification for major changes
-      if (data.changeType === 'engagement_spike' && data.percentageIncrease && data.percentageIncrease > 50) {
-        console.log(`📈 Engagement spike detected: ${data.percentageIncrease}% increase`);
-      }
-      
-      if (data.changeType === 'completion_milestone' && data.milestone) {
-        console.log(`🎯 Completion milestone reached: ${data.milestone}`);
-      }
-    });
-
-    return () => {
-      unsubscribeNotification?.();
-    };
-  }, [isConnected, subscribe]);
 
   const handleExport = async (format: 'pdf' | 'csv') => {
     try {
@@ -439,9 +510,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         </TabsList>
         
         <TabsContent value="overview" className="space-y-6">
+          {/* Live Engagement Metrics */}
+          <LiveEngagementMetrics 
+            courseId={filters.courseId}
+            timeRange={filters.timeGranularity}
+            showAlerts={true}
+          />
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <EngagementChart 
-              data={engagementData}
+              data={localEngagementData}
               timeRange={filters.timeGranularity}
               realTime={isConnected}
             />
@@ -460,7 +538,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         
         <TabsContent value="engagement" className="space-y-6">
           <EngagementChart 
-            data={engagementData}
+            data={localEngagementData}
             timeRange={filters.timeGranularity}
             realTime={isConnected}
             showDetailed={true}

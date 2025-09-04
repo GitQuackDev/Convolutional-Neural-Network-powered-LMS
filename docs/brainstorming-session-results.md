@@ -156,7 +156,7 @@
 **Recommended Implementation Phases:**
 1. **Phase 1: Core LMS Foundation**
    - User authentication (Gmail, email, Google account)
-   - User roles (students, professors, admin, community admin, mods)
+   - User roles with different dashboards available or seeable for each roles (students, professors, admin, community admin, mods)
    - Course management system
    - Basic discussion forums
    - Assignment submission system

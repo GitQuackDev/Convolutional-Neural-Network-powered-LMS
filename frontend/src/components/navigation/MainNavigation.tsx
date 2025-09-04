@@ -10,7 +10,8 @@ import {
   LogOut,
   Bell,
   Menu,
-  X
+  X,
+  TrendingUp
 } from 'lucide-react';
 
 import {
@@ -26,6 +27,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNotificationsWebSocket } from '@/hooks/useNotificationsWebSocket';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 interface NavigationProps {
@@ -41,11 +44,33 @@ export const MainNavigation: React.FC<NavigationProps> = ({
   userRole = 'student',
   userName = 'John Doe',
   userAvatar,
-  notificationCount = 3,
+  notificationCount: initialNotificationCount = 3,
   activeView = 'dashboard',
   onNavigate = () => {}
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { toast } = useToast();
+  
+  // Real-time notifications WebSocket
+  const [notificationState] = useNotificationsWebSocket();
+
+  // Use real-time notification count if connected, otherwise fall back to prop
+  const notificationCount = notificationState.isConnected ? notificationState.unreadCount : initialNotificationCount;
+
+  // Show toast for new notifications
+  React.useEffect(() => {
+    if (notificationState.notifications.length > 0) {
+      const latestNotification = notificationState.notifications[0];
+      if (latestNotification && !latestNotification.isRead) {
+        // Only show toast for high priority notifications to avoid spam
+        if (latestNotification.priority === 'high' || latestNotification.priority === 'urgent') {
+          toast(latestNotification.title, { 
+            type: latestNotification.priority === 'urgent' ? 'error' : 'info' 
+          });
+        }
+      }
+    }
+  }, [notificationState.notifications, toast]);
   
   const isActive = (view: string) => {
     return activeView === view;
@@ -71,6 +96,12 @@ export const MainNavigation: React.FC<NavigationProps> = ({
       description: "Upload content for AI-powered analysis"
     },
     {
+      title: "Multi-AI Analysis",
+      view: "ai-analysis",
+      icon: Brain,
+      description: "Advanced multi-model AI content analysis"
+    },
+    {
       title: "Discussions",
       view: "discussions",
       icon: MessageSquare,
@@ -92,9 +123,15 @@ export const MainNavigation: React.FC<NavigationProps> = ({
       description: "Manage your courses and content"
     },
     {
+      title: "Multi-AI Analysis",
+      view: "ai-analysis",
+      icon: Brain,
+      description: "Advanced multi-model AI content analysis"
+    },
+    {
       title: "Analytics",
       view: "professor-analytics",
-      icon: Brain,
+      icon: TrendingUp,
       description: "CNN analysis insights and student progress"
     },
     {

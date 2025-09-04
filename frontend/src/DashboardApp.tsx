@@ -5,6 +5,7 @@ import { StudentDashboard } from '@/components/dashboard';
 import { CourseModuleView } from '@/components/courses';
 import { AssignmentSubmission } from '@/components/assignments';
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
+import { MultiAIAnalysisInterface } from '@/components/ai/MultiAIAnalysisInterface';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -56,6 +57,8 @@ export function DashboardApp() {
             onUploadComplete={handleUploadComplete}
           />
         );
+      case 'ai-analysis':
+        return <MultiAIAnalysisInterface />;
       case 'dashboard':
         return (
           <StudentDashboard
