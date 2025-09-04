@@ -35,14 +35,6 @@ export const EngagementChart: React.FC<EngagementChartProps> = ({
   showDetailed = false,
   className = ''
 }) => {
-  const chartData = useMemo(() => {
-    return data.map(point => ({
-      ...point,
-      timestamp: new Date(point.timestamp).getTime(),
-      formattedTime: formatTime(new Date(point.timestamp), timeRange)
-    })).sort((a, b) => a.timestamp - b.timestamp);
-  }, [data, timeRange]);
-
   const formatTime = (date: Date, granularity: string): string => {
     switch (granularity) {
       case 'hour':
@@ -55,6 +47,14 @@ export const EngagementChart: React.FC<EngagementChartProps> = ({
         return date.toLocaleDateString();
     }
   };
+
+  const chartData = useMemo(() => {
+    return data.map(point => ({
+      ...point,
+      timestamp: new Date(point.timestamp).getTime(),
+      formattedTime: formatTime(new Date(point.timestamp), timeRange)
+    })).sort((a, b) => a.timestamp - b.timestamp);
+  }, [data, timeRange]);
 
   const CustomTooltip = ({ active, payload, label }: {
     active?: boolean;

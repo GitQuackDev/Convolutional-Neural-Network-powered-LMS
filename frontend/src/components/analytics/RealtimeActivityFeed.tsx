@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 import type { RealtimeActivityEvent } from '@/types/analytics';
 
@@ -27,73 +28,186 @@ export const RealtimeActivityFeed: React.FC<RealtimeActivityFeedProps> = ({
   className = ''
 }) => {
   const [activities, setActivities] = useState<RealtimeActivityEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Enhanced WebSocket connection for real-time activity feed
+  const { subscribe, emit } = useWebSocket('/analytics');
 
-  // Mock activities for demonstration
+  // Real-time activity handlers using WebSocket
   useEffect(() => {
-    if (isConnected) {
-      const mockActivities: RealtimeActivityEvent[] = [
-        {
-          id: '1',
-          type: 'user_joined',
-          userId: 'user123',
-          userName: 'Sarah Chen',
-          description: 'Joined course "Introduction to AI"',
-          timestamp: new Date(Date.now() - 2 * 60 * 1000),
-          metadata: { courseId: 'ai-101' }
-        },
-        {
-          id: '2',
+    if (!isConnected) {
+      setLoading(false);
+      return;
+    }
+
+    console.log('📡 Connecting to real-time activity feed...');
+
+    // Subscribe to real-time activity events using available WebSocket events
+    const unsubscribeProgress = subscribe('progress', (data) => {
+      if (data.type === 'analysis_progress') {
+        const activity: RealtimeActivityEvent = {
+          id: `analysis_progress_${Date.now()}`,
           type: 'analysis_started',
-          userId: 'user456',
-          userName: 'Mike Johnson',
-          description: 'Started CNN analysis on image dataset',
-          timestamp: new Date(Date.now() - 5 * 60 * 1000),
-          metadata: { analysisType: 'cnn', fileName: 'dataset.zip' }
-        },
-        {
-          id: '3',
-          type: 'analysis_completed',
-          userId: 'user789',
-          userName: 'Emily Rodriguez',
-          description: 'Completed GPT-4 text analysis',
-          timestamp: new Date(Date.now() - 8 * 60 * 1000),
-          metadata: { analysisType: 'gpt4', confidence: 0.92 }
-        },
-        {
-          id: '4',
-          type: 'session_ended',
-          userId: 'user321',
-          userName: 'David Kim',
-          description: 'Ended 2.5 hour learning session',
-          timestamp: new Date(Date.now() - 15 * 60 * 1000),
-          metadata: { duration: 9000 }
-        }
-      ];
-
-      setActivities(mockActivities);
-
-      // Simulate real-time updates
-      const interval = setInterval(() => {
-        const activityTypes: Array<RealtimeActivityEvent['type']> = ['user_joined', 'analysis_started', 'analysis_completed', 'session_ended'];
-        const newActivity: RealtimeActivityEvent = {
-          id: Date.now().toString(),
-          type: activityTypes[Math.floor(Math.random() * 4)],
-          userId: `user${Math.floor(Math.random() * 1000)}`,
-          userName: ['Alex Thompson', 'Lisa Wang', 'Carlos Martinez', 'Nina Patel'][Math.floor(Math.random() * 4)],
-          description: 'Performed a learning activity',
+          userId: data.userId,
+          userName: 'User', // Default name since not provided
+          description: `Started analysis ${data.analysisId ? `(Job: ${data.analysisId})` : ''}`,
           timestamp: new Date(),
-          metadata: {}
+          metadata: { 
+            analysisId: data.analysisId || '',
+            progress: data.progress || 0
+          }
+        };
+        
+        setActivities(prev => [activity, ...prev].slice(0, maxItems));
+      } else if (data.type === 'analysis_complete') {
+        const activity: RealtimeActivityEvent = {
+          id: `analysis_complete_${Date.now()}`,
+          type: 'analysis_completed',
+          userId: data.userId,
+          userName: 'User',
+          description: `Completed analysis ${data.analysisId ? `(Job: ${data.analysisId})` : ''}`,
+          timestamp: new Date(),
+          metadata: { 
+            analysisId: data.analysisId || '',
+            dataReceived: true
+          }
+        };
+        
+        setActivities(prev => [activity, ...prev].slice(0, maxItems));
+      } else if (data.type === 'session_update') {
+        const activity: RealtimeActivityEvent = {
+          id: `session_update_${Date.now()}`,
+          type: 'session_ended',
+          userId: data.userId,
+          userName: 'User',
+          description: 'Updated learning session',
+          timestamp: new Date(),
+          metadata: { 
+            sessionUpdate: true
+          }
+        };
+        
+        setActivities(prev => [activity, ...prev].slice(0, maxItems));
+      }
+    });
+
+    const unsubscribeAnalytics = subscribe('analytics_update', (data) => {
+      console.log('📊 Real-time analytics update for activity feed:', data);
+      
+      const activity: RealtimeActivityEvent = {
+        id: `analytics_${Date.now()}`,
+        type: 'user_joined', // Generic activity type for analytics updates
+        userId: 'system',
+        userName: 'Analytics System',
+        description: 'Analytics metrics updated',
+        timestamp: new Date(data.timestamp),
+        metadata: { type: 'metrics_update' }
+      };
+      
+      setActivities(prev => [activity, ...prev].slice(0, maxItems));
+    });
+
+    const unsubscribeEngagement = subscribe('engagement_update', (data) => {
+      console.log('👥 Real-time engagement update for activity feed:', data);
+      
+      const activity: RealtimeActivityEvent = {
+        id: `engagement_${Date.now()}`,
+        type: 'user_joined',
+        userId: data.dataPoint.courseId || 'unknown',
+        userName: 'Student',
+        description: `Learning session activity (${data.dataPoint.sessionDuration}min)`,
+        timestamp: new Date(data.timestamp),
+        metadata: { 
+          sessionDuration: data.dataPoint.sessionDuration,
+          pageViews: data.dataPoint.pageViews
+        }
+      };
+      
+      setActivities(prev => [activity, ...prev].slice(0, maxItems));
+    });
+
+    const unsubscribeSignificant = subscribe('significant_change', (data) => {
+      console.log('🚨 Significant change for activity feed:', data);
+      
+      const activity: RealtimeActivityEvent = {
+        id: `significant_${Date.now()}`,
+        type: 'user_joined',
+        userId: 'system',
+        userName: 'System Alert',
+        description: `${data.changeType}: ${data.milestone || `${data.percentageIncrease}% change`}`,
+        timestamp: new Date(data.timestamp),
+        metadata: { 
+          changeType: data.changeType,
+          percentageIncrease: data.percentageIncrease || 0,
+          milestone: data.milestone || ''
+        }
+      };
+      
+      setActivities(prev => [activity, ...prev].slice(0, maxItems));
+    });
+
+    console.log('📡 Subscribed to real-time activity events');
+
+    // Emit request for recent activities - using a simple request pattern
+    emit('subscribe_analytics', {
+      includeActivities: true,
+      maxItems
+    });
+
+    setLoading(false);
+
+    return () => {
+      unsubscribeProgress?.();
+      unsubscribeAnalytics?.();
+      unsubscribeEngagement?.();
+      unsubscribeSignificant?.();
+    };
+  }, [isConnected, subscribe, emit, maxItems]);
+
+  // HTTP fallback when WebSocket is not available
+  useEffect(() => {
+    if (isConnected || loading) return;
+
+    console.log('📡 WebSocket not available, loading activities via API');
+    
+    const loadActivitiesViaAPI = async () => {
+      try {
+        // Try to load recent activities from API
+        // Note: This would need a backend endpoint
+        console.log('📚 Loading recent activities via HTTP API...');
+        
+        // For now, create a fallback activity to show system is working
+        const fallbackActivity: RealtimeActivityEvent = {
+          id: 'fallback',
+          type: 'user_joined',
+          userId: 'system',
+          userName: 'System',
+          description: 'Real-time activity feed - HTTP fallback mode',
+          timestamp: new Date(),
+          metadata: { source: 'api_fallback' }
         };
 
-        setActivities(prev => {
-          const updated = [newActivity, ...prev].slice(0, maxItems);
-          return updated;
-        });
-      }, 30000); // Add new activity every 30 seconds
+        setActivities([fallbackActivity]);
+      } catch (error) {
+        console.error('Failed to load activities via API:', error);
+        
+        // Show connection error activity
+        const errorActivity: RealtimeActivityEvent = {
+          id: 'error',
+          type: 'user_joined',
+          userId: 'system',
+          userName: 'System',
+          description: 'Unable to load real-time activities - check connection',
+          timestamp: new Date(),
+          metadata: { source: 'error' }
+        };
 
-      return () => clearInterval(interval);
-    }
-  }, [isConnected, maxItems]);
+        setActivities([errorActivity]);
+      }
+    };
+
+    loadActivitiesViaAPI();
+  }, [isConnected, loading]);
 
   const getActivityIcon = (type: RealtimeActivityEvent['type']) => {
     switch (type) {

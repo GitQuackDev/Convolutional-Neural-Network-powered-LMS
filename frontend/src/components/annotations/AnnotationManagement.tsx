@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea';
 import { Eye, EyeOff, Flag, Trash2, CheckCircle, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiService } from '@/services/apiService';
 import type { AnnotationData } from './AnnotationOverlay';
 
 export interface ModerationAnnotation extends AnnotationData {
@@ -67,24 +68,66 @@ export const AnnotationManagement: React.FC<AnnotationManagementProps> = ({
   const loadAnnotations = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        contentId,
-        contentType,
-        limit: '100'
-      });
-
-      const response = await fetch(`/api/annotations?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAnnotations(data.annotations || []);
-      } else {
-        toast.error('Failed to load annotations');
-      }
+      // Use enhanced API service instead of direct fetch
+      const annotationsData = await apiService.annotations.getAnnotations(contentId);
+      
+      // Transform API data to match component expectations
+      const moderationAnnotations: ModerationAnnotation[] = annotationsData.map(annotation => ({
+        id: annotation.id,
+        contentId: annotation.contentId,
+        contentType: contentType, // Use component prop
+        text: annotation.text,
+        position: {
+          x: annotation.position.x,
+          y: annotation.position.y,
+          width: annotation.position.width || 100, // Default width if not provided
+          height: annotation.position.height || 20, // Default height if not provided
+        },
+        annotationType: annotation.type.toUpperCase() as 'COMMENT' | 'QUESTION' | 'SUGGESTION' | 'HIGHLIGHT' | 'DRAWING' | 'BOOKMARK',
+        visibility: 'COURSE' as 'PRIVATE' | 'COURSE' | 'INSTRUCTORS' | 'STUDY_GROUP' | 'PUBLIC', // Default visibility
+        isResolved: false, // Default value - backend would provide this
+        author: {
+          id: annotation.userId,
+          firstName: annotation.userName.split(' ')[0] || 'User',
+          lastName: annotation.userName.split(' ')[1] || '',
+          role: 'STUDENT' // Default role
+        },
+        replies: annotation.replies?.map(reply => ({
+          id: reply.id,
+          contentId: annotation.contentId,
+          contentType: contentType,
+          text: reply.text,
+          position: {
+            x: annotation.position.x,
+            y: annotation.position.y,
+            width: annotation.position.width || 100,
+            height: annotation.position.height || 20,
+          },
+          annotationType: 'COMMENT' as const,
+          visibility: 'COURSE' as const,
+          isResolved: false,
+          author: {
+            id: reply.userId,
+            firstName: reply.userName.split(' ')[0] || 'User',
+            lastName: reply.userName.split(' ')[1] || '',
+            role: 'STUDENT'
+          },
+          createdAt: reply.createdAt,
+          isEdited: false
+        })),
+        createdAt: annotation.createdAt,
+        editedAt: annotation.updatedAt,
+        isEdited: annotation.updatedAt !== annotation.createdAt,
+        // ModerationAnnotation specific fields
+        isHidden: false,
+        isFlagged: false,
+        moderationStatus: 'approved',
+        moderationReason: undefined,
+        moderatedAt: undefined,
+        moderatedBy: undefined
+      }));
+      
+      setAnnotations(moderationAnnotations);
     } catch (error) {
       console.error('Error loading annotations:', error);
       toast.error('Failed to load annotations');

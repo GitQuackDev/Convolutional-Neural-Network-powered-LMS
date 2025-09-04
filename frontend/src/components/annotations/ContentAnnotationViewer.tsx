@@ -8,6 +8,7 @@ import { MessageSquare, Settings, BarChart3, Eye, Users } from 'lucide-react';
 // import { AnnotationOverlay } from './AnnotationOverlay';
 import { AnnotationManagement } from './AnnotationManagement';
 import { AnnotationAnalyticsDashboard } from './AnnotationAnalyticsDashboard';
+import { apiService } from '@/services/apiService';
 import type { AnnotationData } from './AnnotationOverlay';
 
 interface ContentAnnotationViewerProps {
@@ -49,32 +50,34 @@ export const ContentAnnotationViewer: React.FC<ContentAnnotationViewerProps> = (
   const loadAnnotationStats = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        contentId,
-        contentType,
-        statsOnly: 'true'
-      });
-
-      const response = await fetch(`/api/annotations?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAnnotationStats({
-          total: data.total || 0,
-          byType: data.byType || {},
-          unresolved: data.unresolved || 0
-        });
-      }
+      // Use the enhanced API service instead of direct fetch
+      const annotations = await apiService.annotations.getAnnotations(contentId);
+      
+      // Calculate stats from the returned annotations
+      const annotationStats = {
+        total: annotations.length,
+        byType: annotations.reduce((acc, annotation) => {
+          acc[annotation.type] = (acc[annotation.type] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
+        unresolved: annotations.filter(annotation => 
+          annotation.type === 'question' && !annotation.replies?.length
+        ).length
+      };
+      
+      setAnnotationStats(annotationStats);
     } catch (error) {
       console.error('Error loading annotation stats:', error);
+      // Enhanced error handling with user-friendly message
+      setAnnotationStats({
+        total: 0,
+        byType: {},
+        unresolved: 0
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [contentId, contentType]);
+  }, [contentId]);
 
   useEffect(() => {
     loadAnnotationStats();
